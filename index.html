@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Inevitable</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Courier New', Courier, monospace;
+            user-select: none;
+        }
+
+        #game-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Eye Drooping Effect */
+        #lid-top, #lid-bottom {
+            position: absolute;
+            width: 100%;
+            height: 50%;
+            background: #000;
+            z-index: 100;
+            transition: height 1.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+        #lid-top { top: 0; }
+        #lid-bottom { bottom: 0; }
+
+        /* UI Overlays */
+        .overlay {
+            position: absolute;
+            pointer-events: none;
+            display: none;
+            z-index: 50;
+        }
+
+        #crosshair {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 20px;
+            display: block;
+        }
+
+        #interact-prompt {
+            top: 55%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 24px;
+            text-shadow: 2px 2px 0px #000;
+        }
+
+        #flash-text {
+            top: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 40px;
+            text-shadow: 3px 3px 0px #000;
+            opacity: 0;
+            transition: opacity 0.5s;
+            display: block;
+        }
+
+        #hint-text {
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #aaa;
+            font-size: 18px;
+            background: rgba(0,0,0,0.6);
+            padding: 10px 20px;
+            border-radius: 5px;
+            opacity: 0;
+            transition: opacity 1s;
+            display: block;
+        }
+
+        #note-view {
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 60;
+            pointer-events: auto;
+        }
+
+        #note-view .paper {
+            background: #f4f4f4;
+            padding: 60px;
+            border-radius: 2px;
+            box-shadow: 0 0 20px rgba(0,0,0,1);
+            max-width: 600px;
+            text-align: center;
+        }
+
+        #note-view p {
+            color: #900;
+            font-size: 45px;
+            font-weight: bold;
+            font-style: italic;
+            margin: 0;
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        #note-view .sub {
+            color: #ccc;
+            margin-top: 30px;
+            font-size: 16px;
+        }
+
+        #dialog-box {
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 700px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #555;
+            color: white;
+            padding: 20px;
+            font-size: 20px;
+            line-height: 1.5;
+            display: none;
+            z-index: 60;
+        }
+
+        #dialog-box .advance {
+            display: block;
+            margin-top: 15px;
+            color: #888;
+            font-size: 14px;
+            text-align: right;
+        }
+
+        #input-view {
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            padding: 30px;
+            border: 2px solid #fff;
+            display: none;
+            z-index: 70;
+            pointer-events: auto;
+            text-align: center;
+        }
+        #input-view input {
+            width: 300px; padding: 10px; font-size: 18px; background: #222; color: #fff; border: 1px solid #555; outline: none;
+        }
+        #input-view button {
+            padding: 10px 20px; font-size: 18px; margin-left: 10px; cursor: pointer; background: #444; color: #fff; border: 1px solid #777;
+        }
+        #input-view button:hover { background: #666; }
+
+        #game-over {
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: black;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        #game-over h1 {
+            color: #d00;
+            font-size: 4vw;
+            text-shadow: 0 0 10px #f00;
+            text-align: center;
+        }
+
+        .click-to-start {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            background: #000; color: white; display: flex; align-items: center; justify-content: center;
+            z-index: 200; font-size: 24px; cursor: pointer;
+        }
+    </style>
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <div id="start-screen" class="click-to-start">Click to Wake Up</div>
+
+    <div id="lid-top"></div>
+    <div id="lid-bottom"></div>
+
+    <div id="crosshair" class="overlay">+</div>
+    <div id="interact-prompt" class="overlay"></div>
+    <div id="flash-text" class="overlay">Look outside.</div>
+    <div id="hint-text" class="overlay"></div>
+
+    <div id="note-view" class="overlay">
+        <div class="paper">
+            <p>They're coming. I need to run.</p>
+        </div>
+        <div class="sub">Press Z to put down</div>
+    </div>
+
+    <div id="dialog-box" class="overlay">
+        <span id="dialog-text"></span>
+        <span class="advance">[ Z ] to advance</span>
+    </div>
+
+    <div id="input-view" class="overlay">
+        <p style="color:white; margin-top:0;">Ask the entity a question:</p>
+        <input type="text" id="q-input" autocomplete="off" placeholder="What are you?" />
+        <button id="q-btn">Ask</button>
+    </div>
+
+    <div id="game-over" class="overlay">
+        <h1>GAME OVER.<br><br>YOU CANT ESCAPE HIM.<br><br>IT IS INEVITABLE.</h1>
+    </div>
+
+<script>
+// --- GAME STATE ---
+const STATE = {
+    WAKING: 0,
+    FREE: 1,
+    INSIDE: 2,
+    NOTE_READ: 3,
+    SEEK_BOX: 4,
+    SMILER_TALK1: 5,
+    SMILER_TALK2: 6,
+    INPUT_Q: 7,
+    WAIT_Q: 8,
+    READ_A: 9,
+    SMILER_WALKS: 10,
+    SMILER_TALK3: 11,
+    CHASE: 12,
+    DEAD: 13
+};
+
+let currentState = STATE.WAKING;
+let timeInState = 0;
+
+// --- CONFIG & DOM ---
+const ui = {
+    start: document.getElementById('start-screen'),
+    prompt: document.getElementById('interact-prompt'),
+    flash: document.getElementById('flash-text'),
+    hint: document.getElementById('hint-text'),
+    note: document.getElementById('note-view'),
+    dialog: document.getElementById('dialog-box'),
+    dialogTxt: document.getElementById('dialog-text'),
+    inputView: document.getElementById('input-view'),
+    inputField: document.getElementById('q-input'),
+    inputBtn: document.getElementById('q-btn'),
+    gameOver: document.getElementById('game-over'),
+    lidTop: document.getElementById('lid-top'),
+    lidBottom: document.getElementById('lid-bottom')
+};
+
+// --- THREE.JS SETUP ---
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x020202);
+scene.fog = new THREE.Fog(0x020202, 2, 35);
+
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+const renderer = new THREE.WebGLRenderer({ antialias: false });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+// Lighting
+const ambientLight = new THREE.AmbientLight(0x223344, 0.6);
+scene.add(ambientLight);
+const moonLight = new THREE.DirectionalLight(0x6688aa, 0.5);
+moonLight.position.set(10, 20, 10);
+scene.add(moonLight);
+const houseLight = new THREE.PointLight(0xffa500, 0.8, 15);
+houseLight.position.set(0, 2, -15);
+scene.add(houseLight);
+
+// --- CUSTOM POINTER LOCK & MOVEMENT ---
+let pitch = 0;
+let yaw = 0;
+const PI_2 = Math.PI / 2;
+const keys = { w: false, a: false, s: false, d: false, z: false };
+const velocity = new THREE.Vector3();
+const direction = new THREE.Vector3();
+let speed = 6.0;
+let smilerSpeed = 2.0;
+
+document.addEventListener('mousemove', (e) => {
+    if (document.pointerLockElement === document.body && currentState !== STATE.DEAD) {
+        yaw -= e.movementX * 0.002;
+        pitch -= e.movementY * 0.002;
+        // Realistic neck limits
+        pitch = Math.max(-PI_2 + 0.2, Math.min(PI_2 - 0.2, pitch));
+        
+        const qx = new THREE.Quaternion();
+        qx.setFromAxisAngle(new THREE.Vector3(1, 0, 0), pitch);
+        const qy = new THREE.Quaternion();
+        qy.setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+        camera.quaternion.copy(qy).multiply(qx);
+    }
+});
+
+document.addEventListener('keydown', (e) => {
+    if(e.code === 'KeyW') keys.w = true;
+    if(e.code === 'KeyA') keys.a = true;
+    if(e.code === 'KeyS') keys.s = true;
+    if(e.code === 'KeyD') keys.d = true;
+    if(e.code === 'KeyZ') {
+        if (!keys.z) handleZPress();
+        keys.z = true;
+    }
+});
+document.addEventListener('keyup', (e) => {
+    if(e.code === 'KeyW') keys.w = false;
+    if(e.code === 'KeyA') keys.a = false;
+    if(e.code === 'KeyS') keys.s = false;
+    if(e.code === 'KeyD') keys.d = false;
+    if(e.code === 'KeyZ') keys.z = false;
+});
+
+// Click to lock
+ui.start.addEventListener('click', () => {
+    ui.start.style.display = 'none';
+    document.body.requestPointerLock();
+    startWakingSequence();
+});
+document.body.addEventListener('click', () => {
+    if (ui.start.style.display === 'none' && 
+        currentState !== STATE.DEAD && 
+        currentState !== STATE.INPUT_Q) {
+        document.body.requestPointerLock();
+    }
+});
+
+// --- WORLD BUILDING ---
+const interactables = [];
+let solidWalls = []; // FIXED: Changed from 'const' to 'let' to allow reassignment.
+
+function addWallCollider(x, z, w, d) {
+    solidWalls.push({
+        minX: x - w/2, maxX: x + w/2,
+        minZ: z - d/2, maxZ: z + d/2
+    });
+}
+
+// Ground
+const groundMat = new THREE.MeshLambertMaterial({ color: 0x112211 });
+const groundGeo = new THREE.PlaneGeometry(200, 200);
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+scene.add(ground);
+
+// Forest (Trees)
+const trunkGeo = new THREE.CylinderGeometry(0.3, 0.4, 3);
+const trunkMat = new THREE.MeshLambertMaterial({ color: 0x3d2817 });
+const leavesGeo = new THREE.ConeGeometry(1.5, 4);
+const leavesMat = new THREE.MeshLambertMaterial({ color: 0x0f2a10 });
+
+for (let i = 0; i < 150; i++) {
+    let tx = (Math.random() - 0.5) * 80;
+    let tz = (Math.random() - 0.5) * 80;
+    // Don't spawn on path to house or inside house/box area
+    if (Math.abs(tx) < 6 && tz > -25 && tz < 5) continue;
+    if (tx > 6 && tx < 15 && tz > -12 && tz < -4) continue; // Box area clear
+    
+    let trunk = new THREE.Mesh(trunkGeo, trunkMat);
+    trunk.position.set(tx, 1.5, tz);
+    let leaves = new THREE.Mesh(leavesGeo, leavesMat);
+    leaves.position.set(tx, 4.5, tz);
+    scene.add(trunk);
+    scene.add(leaves);
+    addWallCollider(tx, tz, 0.8, 0.8);
+}
+
+// House
+const houseMat = new THREE.MeshLambertMaterial({ color: 0x444444 });
+// Back wall
+const hwBack = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), houseMat);
+hwBack.position.set(0, 2, -20);
+scene.add(hwBack); addWallCollider(0, -20, 10, 0.5);
+// Left wall
+const hwLeft = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), houseMat);
+hwLeft.position.set(-4.75, 2, -15);
+scene.add(hwLeft); addWallCollider(-4.75, -15, 0.5, 10);
+// Right wall
+const hwRight = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), houseMat);
+hwRight.position.set(4.75, 2, -15);
+scene.add(hwRight); addWallCollider(4.75, -15, 0.5, 10);
+// Front walls (with gap)
+const hwF1 = new THREE.Mesh(new THREE.BoxGeometry(3.5, 4, 0.5), houseMat);
+hwF1.position.set(-3, 2, -10);
+scene.add(hwF1); addWallCollider(-3, -10, 3.5, 0.5);
+const hwF2 = new THREE.Mesh(new THREE.BoxGeometry(3.5, 4, 0.5), houseMat);
+hwF2.position.set(3, 2, -10);
+scene.add(hwF2); addWallCollider(3, -10, 3.5, 0.5);
+// Roof
+const roofGeo = new THREE.ConeGeometry(8, 3, 4);
+const roofMat = new THREE.MeshLambertMaterial({ color: 0x221111 });
+const roof = new THREE.Mesh(roofGeo, roofMat);
+roof.position.set(0, 5.5, -15);
+roof.rotation.y = Math.PI/4;
+scene.add(roof);
+
+// Door (Hinged)
+const doorPivot = new THREE.Group();
+doorPivot.position.set(-1.25, 0, -10); // Hinge pos
+const doorGeo = new THREE.BoxGeometry(2.5, 3.8, 0.2);
+const doorMesh = new THREE.Mesh(doorGeo, new THREE.MeshLambertMaterial({ color: 0x5c4033 }));
+doorMesh.position.set(1.25, 1.9, 0); // Offset from hinge
+doorPivot.add(doorMesh);
+scene.add(doorPivot);
+let doorOpen = false;
+let doorMoving = false;
+doorMesh.userData = { type: 'door' };
+interactables.push(doorMesh);
+// Base door collider (closed)
+let doorColliderIdx = solidWalls.length;
+addWallCollider(0, -10, 2.5, 0.5); 
+
+// Furniture
+const bedMat = new THREE.MeshLambertMaterial({ color: 0x223355 });
+const bedGeo = new THREE.BoxGeometry(3, 1, 5);
+const bed = new THREE.Mesh(bedGeo, bedMat);
+bed.position.set(-2.5, 0.5, -17);
+scene.add(bed); addWallCollider(-2.5, -17, 3, 5);
+const table = new THREE.Mesh(new THREE.BoxGeometry(2, 1.2, 2), new THREE.MeshLambertMaterial({color: 0x553311}));
+table.position.set(2.5, 0.6, -18);
+scene.add(table); addWallCollider(2.5, -18, 2, 2);
+
+// Note
+const noteGeo = new THREE.PlaneGeometry(0.5, 0.7);
+const noteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+const note = new THREE.Mesh(noteGeo, noteMat);
+note.rotation.x = -Math.PI / 2;
+note.position.set(2.5, 1.21, -18);
+scene.add(note);
+note.userData = { type: 'note' };
+interactables.push(note);
+
+// Box outside
+const boxGeo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+const boxMat = new THREE.MeshLambertMaterial({ color: 0x8b5a2b });
+const mysteryBox = new THREE.Mesh(boxGeo, boxMat);
+mysteryBox.position.set(10, 0.75, -8);
+scene.add(mysteryBox);
+mysteryBox.userData = { type: 'box' };
+addWallCollider(10, -8, 1.5, 1.5);
+
+// Smiler Generation
+function createFaceTexture(scary) {
+    const cvs = document.createElement('canvas');
+    cvs.width = 512; cvs.height = 512;
+    const ctx = cvs.getContext('2d');
+    ctx.fillStyle = scary ? '#880000' : '#ffdd00';
+    ctx.fillRect(0,0,512,512);
+    
+    if(!scary) {
+        ctx.fillStyle = '#000';
+        ctx.beginPath(); ctx.arc(160, 200, 30, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(352, 200, 30, 0, Math.PI*2); ctx.fill();
+        ctx.lineWidth = 15; ctx.strokeStyle = '#000';
+        ctx.beginPath(); ctx.arc(256, 270, 100, 0.2, Math.PI-0.2, false); ctx.stroke();
+    } else {
+        // Scary
+        ctx.fillStyle = '#000';
+        ctx.beginPath(); ctx.arc(160, 200, 40, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(352, 200, 40, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(160, 200, 10, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(352, 200, 10, 0, Math.PI*2); ctx.fill();
+        
+        ctx.lineWidth = 20; ctx.strokeStyle = '#000';
+        ctx.beginPath(); ctx.moveTo(100, 350); ctx.lineTo(256, 420); ctx.lineTo(412, 350); ctx.stroke();
+        
+        // blood
+        ctx.fillStyle = '#500';
+        for(let i=0; i<10; i++) {
+            ctx.beginPath(); ctx.arc(Math.random()*512, Math.random()*512, Math.random()*20, 0, Math.PI*2); ctx.fill();
+        }
+    }
+    return new THREE.CanvasTexture(cvs);
+}
+
+let texNormal = createFaceTexture(false);
+let texScary = createFaceTexture(true);
+
+const smilerGeo = new THREE.SphereGeometry(0.7, 32, 32);
+const smilerMat = new THREE.MeshBasicMaterial({ map: texNormal });
+const smiler = new THREE.Mesh(smilerGeo, smilerMat);
+smiler.position.copy(mysteryBox.position);
+smiler.rotation.y = -Math.PI/4; // Look towards player generally
+smiler.visible = false;
+scene.add(smiler);
+smiler.userData = { type: 'smiler' };
+
+const boxPieces = [];
+
+// --- LOGIC / FLOW ---
+let playerHeight = 0.2;
+camera.position.set(0, playerHeight, 0);
+
+function startWakingSequence() {
+    setTimeout(() => {
+        ui.lidTop.style.height = '20%';
+        ui.lidBottom.style.height = '20%';
+        setTimeout(() => {
+            ui.lidTop.style.height = '40%';
+            ui.lidBottom.style.height = '40%';
+            setTimeout(() => {
+                ui.lidTop.style.height = '0%';
+                ui.lidBottom.style.height = '0%';
+                // Rise up
+                let standInterval = setInterval(() => {
+                    playerHeight += 0.05;
+                    if(playerHeight >= 1.7) {
+                        playerHeight = 1.7;
+                        clearInterval(standInterval);
+                        currentState = STATE.FREE;
+                    }
+                }, 30);
+            }, 800);
+        }, 800);
+    }, 500);
+}
+
+function flashText(msg) {
+    ui.flash.innerText = msg;
+    ui.flash.style.display = 'block';
+    ui.flash.style.opacity = 1;
+    setTimeout(() => {
+        ui.flash.style.opacity = 0;
+        setTimeout(()=> ui.flash.style.display = 'none', 500);
+    }, 2000);
+}
+
+function showDialog(text) {
+    ui.dialogTxt.innerText = text;
+    ui.dialog.style.display = 'block';
+}
+function hideDialog() {
+    ui.dialog.style.display = 'none';
+}
+
+function handleZPress() {
+    if(currentState === STATE.DEAD) return;
+
+    if(currentState === STATE.NOTE_READ) {
+        ui.note.style.display = 'none';
+        currentState = STATE.SEEK_BOX;
+        timeInState = 0;
+        flashText("Look outside.");
+        // Enable box interaction
+        interactables.push(mysteryBox);
+        return;
+    }
+
+    if(currentState === STATE.SMILER_TALK1) {
+        showDialog("Ask me a question. I know almost everything.");
+        currentState = STATE.SMILER_TALK2;
+        return;
+    }
+
+    if(currentState === STATE.SMILER_TALK2) {
+        hideDialog();
+        currentState = STATE.INPUT_Q;
+        document.exitPointerLock();
+        ui.inputView.style.display = 'block';
+        ui.inputField.focus();
+        return;
+    }
+
+    if(currentState === STATE.READ_A) {
+        hideDialog();
+        currentState = STATE.SMILER_WALKS;
+        return;
+    }
+    
+    if(currentState === STATE.SMILER_TALK3) {
+        hideDialog();
+        // Morph
+        smiler.material.map = texScary;
+        smiler.scale.set(1.5, 1.5, 1.5);
+        smilerSpeed = 9.0;
+        currentState = STATE.CHASE;
+        flashText("RUN.");
+        return;
+    }
+
+    // Interaction raycast
+    if(activeInteractable) {
+        let type = activeInteractable.userData.type;
+        if(type === 'door' && !doorMoving) {
+            doorMoving = true;
+            let target = doorOpen ? 0 : Math.PI/2;
+            let step = doorOpen ? -0.05 : 0.05;
+            
+            // update collider immediately
+            if(!doorOpen) {
+                 // opening: remove collider
+                 solidWalls[doorColliderIdx].minX = 0; 
+                 solidWalls[doorColliderIdx].maxX = 0;
+            } else {
+                 // closing: restore
+                 solidWalls[doorColliderIdx].minX = 0;
+                 solidWalls[doorColliderIdx].maxX = 2.5;
+            }
+
+            let anim = setInterval(() => {
+                doorPivot.rotation.y += step;
+                if((step > 0 && doorPivot.rotation.y >= target) || (step < 0 && doorPivot.rotation.y <= target)) {
+                    doorPivot.rotation.y = target;
+                    doorOpen = !doorOpen;
+                    doorMoving = false;
+                    clearInterval(anim);
+                    if(currentState === STATE.FREE) {
+                        currentState = STATE.INSIDE;
+                        timeInState = 0;
+                    }
+                }
+            }, 16);
+        }
+        else if (type === 'note' && (currentState === STATE.INSIDE || currentState === STATE.FREE)) {
+            ui.note.style.display = 'flex';
+            currentState = STATE.NOTE_READ;
+        }
+        else if (type === 'box' && currentState === STATE.SEEK_BOX) {
+            // Break box
+            mysteryBox.visible = false;
+            // spawn pieces
+            for(let i=0; i<5; i++){
+                let p = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,0.5), boxMat);
+                p.position.copy(mysteryBox.position);
+                p.userData.vel = new THREE.Vector3((Math.random()-0.5)*5, Math.random()*5, (Math.random()-0.5)*5);
+                scene.add(p);
+                boxPieces.push(p);
+            }
+            
+            // Removing the box's collision 
+            // (this caused the crash in the original code because solidWalls was a const)
+            solidWalls = solidWalls.filter(w => !(w.minX == 10 - 0.75 && w.maxZ == -8 + 0.75));
+            
+            // remove from interactables
+            interactables.splice(interactables.indexOf(mysteryBox), 1);
+            
+            smiler.visible = true;
+            interactables.push(smiler);
+            
+            currentState = STATE.SMILER_TALK1;
+            timeInState = 0;
+            showDialog("Hi! I'm smiler! I know a lot.");
+        }
+    }
+}
+
+// Groq Proxy Integration
+ui.inputBtn.addEventListener('click', async () => {
+    let q = ui.inputField.value.trim();
+    if(!q) q = "What are you?";
+    
+    ui.inputView.style.display = 'none';
+    document.body.requestPointerLock();
+    currentState = STATE.WAIT_Q;
+    showDialog("...");
+
+    try {
+        const res = await fetch("/api/groq", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ question: q })
+        });
+
+        if (!res.ok) throw new Error("API route failed");
+
+        const data = await res.json();
+        showDialog(data.answer);
+    } catch(e) {
+        showDialog("There is no escape from what is coming.");
+    }
+    currentState = STATE.READ_A;
+});
+
+ui.inputField.addEventListener('keydown', (e) => {
+    if(e.code === 'Enter') ui.inputBtn.click();
+});
+// --- MAIN LOOP ---
+const raycaster = new THREE.Raycaster();
+const screenCenter = new THREE.Vector2(0, 0);
+let activeInteractable = null;
+let lastTime = performance.now();
+
+function checkCollisions(newPos) {
+    let r = 0.5; // player radius
+    for(let w of solidWalls) {
+        if (newPos.x + r > w.minX && newPos.x - r < w.maxX &&
+            newPos.z + r > w.minZ && newPos.z - r < w.maxZ) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+    const now = performance.now();
+    const dt = (now - lastTime) / 1000;
+    lastTime = now;
+
+    // Hints system
+    if(currentState > STATE.WAKING && currentState < STATE.CHASE) {
+        timeInState += dt;
+        if(timeInState > 15 && ui.hint.style.opacity == 0) {
+            let msg = "";
+            if(currentState === STATE.FREE) msg = "Go to the house ahead.";
+            else if(currentState === STATE.INSIDE) msg = "Look around inside for a note.";
+            else if(currentState === STATE.SEEK_BOX) msg = "Go outside and find the box.";
+            
+            if(msg) {
+                ui.hint.innerText = msg;
+                ui.hint.style.opacity = 1;
+                ui.hint.style.display = 'block';
+            }
+        } else if (timeInState < 15 && ui.hint.style.opacity == 1) {
+            ui.hint.style.opacity = 0;
+        }
+    } else {
+        ui.hint.style.opacity = 0;
+    }
+
+    // Movement
+    if (document.pointerLockElement === document.body && currentState !== STATE.DEAD) {
+        direction.z = Number(keys.w) - Number(keys.s);
+        direction.x = Number(keys.d) - Number(keys.a);
+        direction.normalize();
+
+        // Calculate view-aligned movement
+        const camDir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+        camDir.y = 0; camDir.normalize();
+        const camRight = new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);
+        camRight.y = 0; camRight.normalize();
+
+        const moveVec = new THREE.Vector3();
+        moveVec.addScaledVector(camDir, direction.z);
+        moveVec.addScaledVector(camRight, direction.x);
+        
+        let targetSpeed = (keys.w || keys.a || keys.s || keys.d) ? speed : 0;
+        
+        let oldX = camera.position.x;
+        let oldZ = camera.position.z;
+        
+        let nextX = oldX + moveVec.x * targetSpeed * dt;
+        if(!checkCollisions(new THREE.Vector3(nextX, camera.position.y, oldZ))) {
+            camera.position.x = nextX;
+        }
+        
+        let nextZ = oldZ + moveVec.z * targetSpeed * dt;
+        if(!checkCollisions(new THREE.Vector3(camera.position.x, camera.position.y, nextZ))) {
+            camera.position.z = nextZ;
+        }
+        
+        // Bobbing
+        if (targetSpeed > 0) {
+            camera.position.y = playerHeight + Math.sin(now * 0.01) * 0.05;
+        } else {
+            camera.position.y = playerHeight;
+        }
+    }
+
+    // Interaction Raycast
+    activeInteractable = null;
+    ui.prompt.style.display = 'none';
+    if(currentState !== STATE.DEAD && currentState !== STATE.INPUT_Q && currentState !== STATE.NOTE_READ) {
+        raycaster.setFromCamera(screenCenter, camera);
+        const intersects = raycaster.intersectObjects(interactables);
+        if (intersects.length > 0 && intersects[0].distance < 4) {
+            let obj = intersects[0].object;
+            let type = obj.userData.type;
+            
+            // Logic filters
+            let show = false;
+            let pText = "";
+            
+            if(type === 'door') { show = true; pText = doorOpen ? "Z to close" : "Z to open"; }
+            else if(type === 'note' && (currentState === STATE.INSIDE || currentState === STATE.FREE)) { show = true; pText = "Z to read"; }
+            else if(type === 'box' && currentState === STATE.SEEK_BOX) { show = true; pText = "Z to break"; }
+            
+            if(show) {
+                activeInteractable = obj;
+                ui.prompt.innerText = pText;
+                ui.prompt.style.display = 'block';
+            }
+        }
+    }
+
+    // Box pieces physics
+    for(let i=boxPieces.length-1; i>=0; i--){
+        let p = boxPieces[i];
+        p.position.addScaledVector(p.userData.vel, dt);
+        p.userData.vel.y -= 9.8 * dt; // gravity
+        p.rotation.x += dt; p.rotation.y += dt;
+        if(p.position.y < 0) {
+            scene.remove(p);
+            boxPieces.splice(i,1);
+        }
+    }
+
+    // Smiler Logic
+    if(currentState === STATE.SMILER_WALKS) {
+        // Move towards bed
+        let targetPos = new THREE.Vector3(-2.5, 1.5, -17);
+        let dist = smiler.position.distanceTo(targetPos);
+        if(dist > 0.1) {
+            smiler.position.lerp(targetPos, dt * smilerSpeed);
+            smiler.lookAt(camera.position);
+        } else {
+            smiler.position.copy(targetPos);
+            currentState = STATE.SMILER_TALK3;
+            showDialog("Oh. You've read this note. Well.. guess I have to chase you!");
+        }
+    }
+    
+    if(currentState === STATE.CHASE) {
+        smiler.lookAt(camera.position);
+        let dir = new THREE.Vector3().subVectors(camera.position, smiler.position);
+        dir.y = 0; dir.normalize();
+        smiler.position.addScaledVector(dir, smilerSpeed * dt);
+        
+        let distToPlayer = smiler.position.distanceTo(camera.position);
+        if(distToPlayer < 1.5) {
+            // CAUGHT
+            currentState = STATE.DEAD;
+            ui.gameOver.style.display = 'flex';
+            document.exitPointerLock();
+        }
+    } else if (smiler.visible && currentState < STATE.SMILER_WALKS) {
+        smiler.lookAt(camera.position);
+    }
+
+    renderer.render(scene, camera);
+}
+
+// Start loop
+animate();
+</script>
+</body>
+</html>
