@@ -163,26 +163,42 @@
         }
         #input-view button:hover { background: #666; }
 
-        #game-over {
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: black;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        #game-over h1 {
-            color: #d00;
-            font-size: 4vw;
-            text-shadow: 0 0 10px #f00;
-            text-align: center;
-        }
+      #game-over {
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: black;
+    display: none;
+    flex-direction: column; /* Stacks text and button vertically */
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
 
-        .click-to-start {
-            position: absolute; top:0; left:0; width:100%; height:100%;
-            background: #000; color: white; display: flex; align-items: center; justify-content: center;
-            z-index: 200; font-size: 24px; cursor: pointer;
-        }
+#game-over h1 {
+    color: #d00;
+    font-size: 3vw;
+    text-shadow: 0 0 10px #f00;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* Styled transition button */
+#level2-btn {
+    padding: 15px 30px;
+    font-size: 20px;
+    font-family: 'Courier New', Courier, monospace;
+    background: #111;
+    color: #ff0000;
+    border: 2px solid #880000;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.4);
+    transition: all 0.3s ease;
+}
+
+#level2-btn:hover {
+    background: #880000;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.9);
+}
     </style>
     <!-- Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -218,8 +234,14 @@
     </div>
 
     <div id="game-over" class="overlay">
-        <h1>GAME OVER.<br><br>YOU CANT ESCAPE HIM.<br><br>IT IS INEVITABLE.</h1>
+    <h1>GAME OVER.<br><br>YOU CANT ESCAPE HIM.<br><br>IT IS INEVITABLE.</h1>
+    <button id="level2-btn">AWAKEN IN THE DESERT</button>
     </div>
+<script>
+document.getElementById('level2-btn').addEventListener('click', () => {
+    window.location.href = '/leveltwo.html';
+});
+</script>
 
 <script>
 // --- GAME STATE ---
