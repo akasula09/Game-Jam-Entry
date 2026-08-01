@@ -270,7 +270,7 @@ let timeInState = 0;
 let hasKey = false;
 let hasCrowbar = false;
 
-// New Inventory & State variables
+// Inventory & State variables
 let hasAxe = false;
 let hasWood = false;
 let hasMirror = false;
@@ -325,8 +325,8 @@ const houseLight = new THREE.PointLight(0xffa500, 0.8, 15);
 houseLight.position.set(0, 2, -15);
 scene.add(houseLight);
 
-const basementLight = new THREE.PointLight(0xff6600, 0.5, 10);
-basementLight.position.set(0, -3, -15);
+const basementLight = new THREE.PointLight(0xff6600, 0.8, 12);
+basementLight.position.set(0, -2.5, -15);
 scene.add(basementLight);
 
 // Floating Arrow Guidance Mesh
@@ -404,12 +404,35 @@ function addWallCollider(x, z, w, d) {
     });
 }
 
-// Ground Ground Ground
+// GROUND & OUTSIDE TERRAIN (Split around House footprint: x:-5..5, z:-20..-10)
 const groundMat = new THREE.MeshLambertMaterial({ color: 0x112211 });
-const groundGeo = new THREE.PlaneGeometry(200, 200);
-const ground = new THREE.Mesh(groundGeo, groundMat);
-ground.rotation.x = -Math.PI / 2;
-scene.add(ground);
+
+function makeTerrainPlane(x, z, w, d) {
+    let p = new THREE.Mesh(new THREE.PlaneGeometry(w, d), groundMat);
+    p.rotation.x = -Math.PI / 2;
+    p.position.set(x, 0, z);
+    scene.add(p);
+}
+// 4 outer ground quadrants surrounding the house
+makeTerrainPlane(0, 40, 200, 100);       // North ground
+makeTerrainPlane(0, -60, 200, 80);       // South ground
+makeTerrainPlane(-52.5, -15, 95, 10);    // West ground
+makeTerrainPlane(52.5, -15, 95, 10);     // East ground
+
+// HOUSE FLOORING / BASEMENT CEILING (WITH TRAPDOOR HOLE)
+const woodFloorMat = new THREE.MeshLambertMaterial({ color: 0x3d2817 });
+
+function makeHouseFloorSection(x, z, w, d) {
+    let f = new THREE.Mesh(new THREE.BoxGeometry(w, 0.2, d), woodFloorMat);
+    f.position.set(x, -0.1, z);
+    scene.add(f);
+}
+// House area: x: -4.5 to 4.5, z: -19.5 to -10.5
+// Trapdoor cutout hole: x: -2 to 0, z: -16 to -14
+makeHouseFloorSection(-3.25, -15, 2.5, 9);  // Left floor section
+makeHouseFloorSection(2.25, -15, 4.5, 9);   // Right floor section
+makeHouseFloorSection(-1, -17.75, 2, 3.5);  // Back floor section
+makeHouseFloorSection(-1, -12.25, 2, 3.5);  // Front floor section
 
 // Forest (Trees)
 const trunkGeo = new THREE.CylinderGeometry(0.3, 0.4, 3);
@@ -454,7 +477,7 @@ keyMesh.userData = { type: 'key' };
 scene.add(keyMesh);
 interactables.push(keyMesh);
 
-// House Walls with Hole in Floor for Trapdoor
+// House Walls
 const houseMat = new THREE.MeshLambertMaterial({ color: 0x444444 });
 const hwBack = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), houseMat);
 hwBack.position.set(0, 2, -20);
@@ -498,7 +521,7 @@ interactables.push(doorMesh);
 let doorColliderIdx = solidWalls.length;
 addWallCollider(0, -10, 2.5, 0.5); 
 
-// Wooden Barricade Mesh (Constructed when player barricades)
+// Wooden Barricade Mesh
 const barricadeGroup = new THREE.Group();
 for(let i=0; i<4; i++) {
     let plank = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.3, 0.15), trunkMat);
@@ -509,7 +532,7 @@ for(let i=0; i<4; i++) {
 barricadeGroup.visible = false;
 scene.add(barricadeGroup);
 
-// Furniture
+// House Furniture
 const bedMat = new THREE.MeshLambertMaterial({ color: 0x223355 });
 const bedGeo = new THREE.BoxGeometry(3, 1, 5);
 const bed = new THREE.Mesh(bedGeo, bedMat);
@@ -521,40 +544,47 @@ table.position.set(2.5, 0.6, -18);
 scene.add(table); addWallCollider(2.5, -18, 2, 2);
 
 // TRAPDOOR & BASEMENT SYSTEM
-// Hole in room floor: Trapdoor placed at (0, 0.01, -14)
+// Trapdoor over hole at (-1, 0.02, -15)
 const trapPivot = new THREE.Group();
-trapPivot.position.set(-1, 0.02, -15);
+trapPivot.position.set(-1, 0.02, -16);
 const trapMesh = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 2), new THREE.MeshLambertMaterial({ color: 0x3a2510 }));
-trapMesh.position.set(1, 0, 1);
+trapMesh.position.set(0, 0, 1);
 trapPivot.add(trapMesh);
 scene.add(trapPivot);
 trapMesh.userData = { type: 'trapdoor' };
 interactables.push(trapMesh);
 
-// Basement Structure (Constructed below room)
-const basementMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
+// Basement Enclosure (Built beneath house)
+const basementMat = new THREE.MeshLambertMaterial({ color: 0x1f1a14 });
+
 // Basement Floor
-const bFloor = new THREE.Mesh(new THREE.BoxGeometry(10, 0.2, 10), basementMat);
+const bFloor = new THREE.Mesh(new THREE.BoxGeometry(9.5, 0.2, 9.5), basementMat);
 bFloor.position.set(0, -4.1, -15);
 scene.add(bFloor);
 
 // Basement Walls
-const bWallB = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), basementMat); bWallB.position.set(0, -2, -20); scene.add(bWallB);
-const bWallF = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), basementMat); bWallF.position.set(0, -2, -10); scene.add(bWallF);
-const bWallL = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), basementMat); bWallL.position.set(-5, -2, -15); scene.add(bWallL);
-const bWallR = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), basementMat); bWallR.position.set(5, -2, -15); scene.add(bWallR);
+const bWallB = new THREE.Mesh(new THREE.BoxGeometry(9.5, 4, 0.4), basementMat); bWallB.position.set(0, -2, -19.5); scene.add(bWallB);
+const bWallF = new THREE.Mesh(new THREE.BoxGeometry(9.5, 4, 0.4), basementMat); bWallF.position.set(0, -2, -10.5); scene.add(bWallF);
+const bWallL = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4, 9.5), basementMat); bWallL.position.set(-4.5, -2, -15); scene.add(bWallL);
+const bWallR = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4, 9.5), basementMat); bWallR.position.set(4.5, -2, -15); scene.add(bWallR);
+
+// Shaft Trim around trapdoor hole
+const shaftWallL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.8, 2), basementMat); shaftWallL.position.set(-2, -0.4, -15); scene.add(shaftWallL);
+const shaftWallR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.8, 2), basementMat); shaftWallR.position.set(0, -0.4, -15); scene.add(shaftWallR);
+const shaftWallB = new THREE.Mesh(new THREE.BoxGeometry(2, 0.8, 0.1), basementMat); shaftWallB.position.set(-1, -0.4, -16); scene.add(shaftWallB);
+const shaftWallF = new THREE.Mesh(new THREE.BoxGeometry(2, 0.8, 0.1), basementMat); shaftWallF.position.set(-1, -0.4, -14); scene.add(shaftWallF);
 
 // Basement Ladder
 const ladderMat = new THREE.MeshLambertMaterial({ color: 0x553311 });
 for(let y=0; y<8; y++) {
     let rung = new THREE.Mesh(new THREE.BoxGeometry(1, 0.08, 0.08), ladderMat);
-    rung.position.set(-0.8, -3.8 + y*0.5, -13.1);
+    rung.position.set(-0.8, -3.8 + y*0.5, -14.1);
     scene.add(rung);
 }
 
 // Basement Table 1 (Holds Axe)
 const bTable1 = new THREE.Mesh(new THREE.BoxGeometry(2, 1.2, 1.5), ladderMat);
-bTable1.position.set(-3.5, -3.4, -15);
+bTable1.position.set(-3.2, -3.4, -15);
 scene.add(bTable1);
 
 // Axe Model on Table 1
@@ -564,7 +594,7 @@ handle.rotation.z = Math.PI / 2;
 const head = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.4, 0.08), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8 }));
 head.position.set(0.5, 0, 0);
 axeGroup.add(handle); axeGroup.add(head);
-axeGroup.position.set(-3.5, -2.7, -15);
+axeGroup.position.set(-3.2, -2.7, -15);
 axeGroup.userData = { type: 'axe' };
 scene.add(axeGroup);
 interactables.push(head);
@@ -572,13 +602,13 @@ head.userData = { type: 'axe' };
 
 // Basement Table 2 (Holds Note & Hand Mirror)
 const bTable2 = new THREE.Mesh(new THREE.BoxGeometry(2, 1.2, 1.5), ladderMat);
-bTable2.position.set(3.5, -3.4, -15);
+bTable2.position.set(3.2, -3.4, -15);
 scene.add(bTable2);
 
 // Basement Note
 const note3 = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.5), new THREE.MeshBasicMaterial({ color: 0xffffff }));
 note3.rotation.x = -Math.PI / 2;
-note3.position.set(3.2, -2.79, -15);
+note3.position.set(3.0, -2.79, -15);
 note3.userData = { type: 'note3' };
 scene.add(note3);
 interactables.push(note3);
@@ -592,7 +622,7 @@ const mGlass = new THREE.Mesh(new THREE.CircleGeometry(0.2, 16), new THREE.MeshS
 mGlass.rotation.x = -Math.PI / 2;
 mGlass.position.set(0, 0.38, 0);
 mirrorGroup.add(mHandle); mirrorGroup.add(mFrame); mirrorGroup.add(mGlass);
-mirrorGroup.position.set(3.8, -2.78, -15);
+mirrorGroup.position.set(3.5, -2.78, -15);
 mirrorGroup.userData = { type: 'mirror' };
 scene.add(mirrorGroup);
 interactables.push(mGlass);
@@ -876,14 +906,14 @@ function handleZPress() {
         }
         else if (type === 'trapdoor') {
             trapdoorOpen = !trapdoorOpen;
-            let targetRot = trapdoorOpen ? -Math.PI / 1.8 : 0;
+            let targetRot = trapdoorOpen ? Math.PI / 1.8 : 0;
             let targetY = trapdoorOpen ? 0.8 : 0.02;
             let anim = setInterval(() => {
-                trapPivot.rotation.z += (trapdoorOpen ? -0.05 : 0.05);
+                trapPivot.rotation.x += (trapdoorOpen ? 0.05 : -0.05);
                 trapPivot.position.y += (trapdoorOpen ? 0.04 : -0.04);
-                if ((trapdoorOpen && trapPivot.rotation.z <= targetRot) || (!trapdoorOpen && trapPivot.rotation.z >= targetRot)) {
-                    trapPivot.rotation.z = targetRot;
-                    trapPivot.position.y = targetY;
+                if ((trapdoorOpen && trapPivot.rotation.x >= targetRot) || (!trapdoorOpen && trapPivot.rotation.x <= 0)) {
+                    trapPivot.rotation.x = trapdoorOpen ? targetRot : 0;
+                    trapPivot.position.y = trapdoorOpen ? targetY : 0.02;
                     clearInterval(anim);
                 }
             }, 16);
@@ -973,14 +1003,13 @@ let lastTime = performance.now();
 
 function checkCollisions(newPos) {
     let r = 0.5;
-    // Special basement drop bounds logic
-    if (trapdoorOpen && newPos.x > -2 && newPos.x < 0 && newPos.z > -15 && newPos.z < -13) {
-        return false; // Allow falling through trapdoor hole
+    // Allow falling through trapdoor shaft
+    if (trapdoorOpen && newPos.x > -2 && newPos.x < 0 && newPos.z > -16 && newPos.z < -14) {
+        return false;
     }
     for(let w of solidWalls) {
         if (newPos.x + r > w.minX && newPos.x - r < w.maxX &&
             newPos.z + r > w.minZ && newPos.z - r < w.maxZ) {
-            // If in room height, block horizontal floor walls
             if (newPos.y > -0.5) return true;
         }
     }
@@ -1055,10 +1084,10 @@ function animate() {
 
     // Player Gravity / Drop into Cellar Logic
     let currentFloor = 1.7;
-    if (camera.position.x > -2 && camera.position.x < 0 && camera.position.z > -15 && camera.position.z < -13 && trapdoorOpen) {
-        currentFloor = -2.5; // Dropped into basement floor height
+    if (camera.position.x > -2 && camera.position.x < 0 && camera.position.z > -16 && camera.position.z < -14 && trapdoorOpen) {
+        currentFloor = -2.3; // Drop down into cellar level
     } else if (camera.position.y < 0) {
-        currentFloor = -2.5;
+        currentFloor = -2.3;
     }
     
     if (camera.position.y > currentFloor) {
@@ -1160,16 +1189,14 @@ function animate() {
                 let dir = new THREE.Vector3().subVectors(doorTargetPos, smiler.position).normalize();
                 smiler.position.addScaledVector(dir, smilerSpeed * dt);
             } else {
-                // Attacking the Barricade!
                 smilerAttackTime += dt;
                 
-                // Shake Smiler & Barricade with cracking effect
                 smiler.position.x = doorTargetPos.x + (Math.random() - 0.5) * 0.2;
                 barricadeGroup.position.x = (Math.random() - 0.5) * 0.1;
 
                 if (smilerAttackTime > 20 && !doorFallen) {
                     doorFallen = true;
-                    doorPivot.rotation.x = Math.PI / 2; // Door falls flat
+                    doorPivot.rotation.x = Math.PI / 2;
                     flashText("The front door collapsed!");
                 }
                 if (smilerAttackTime > 30) {
@@ -1179,7 +1206,6 @@ function animate() {
                 }
             }
         } else {
-            // Directly chase player
             let dir = new THREE.Vector3().subVectors(camera.position, smiler.position);
             dir.y = 0; dir.normalize();
             smiler.position.addScaledVector(dir, smilerSpeed * dt);
