@@ -44,7 +44,6 @@
 
         .click-to-start { position: absolute; top:0; left:0; width:100%; height:100%; background: #1a0f05; color: #ffcc66; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; cursor: pointer; text-align: center; }
     </style>
-    <!-- Defer heavy library downloads so HTML paints instantly -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Tone/14.8.49/Tone.js"></script>
 </head>
@@ -53,9 +52,9 @@
     <div id="start-screen" class="click-to-start">
         <h2>LEVEL 2: DESERT CANYON COMPLEX</h2>
         <p style="font-size: 15px; color: #d4a775; max-width: 520px; line-height: 1.6;">
-            The city is a dense desert labyrinth of adobe, sandstone, and clay.<br>
+            Follow the <b>dark brown path</b> guiding you through the canyon.<br>
             Locate 4 Sandstone Buttons to break the Northern Gate.<br>
-            Drive the Cruiser [E]. Beware the Patrol Guards.<br>
+            Drive the Cruiser [E] | Jump with [Space]<br>
             Press [H] anytime for a target hint.
         </p>
         <span style="font-size: 18px; border: 1px solid #ffcc66; padding: 10px 24px; margin-top: 15px;">Enter Desert Complex</span>
@@ -91,7 +90,7 @@
     </div>
 
 <script>
-// --- LAZY AUDIO ENGINE (No freeze on tab load) ---
+// --- LAZY AUDIO ENGINE ---
 let audioInitialized = false;
 let synthHeartbeat, synthAmbience, synthSiren;
 
@@ -135,6 +134,12 @@ let carFuel = 100.0;
 let carSpeed = 0.0;
 let carAngle = 0.0;
 
+// Jumping & Physics state
+let velocityY = 0;
+let isGrounded = true;
+const gravity = 22.0;
+const jumpStrength = 8.5;
+
 const ui = {
     start: document.getElementById('start-screen'),
     prompt: document.getElementById('interact-prompt'),
@@ -157,19 +162,22 @@ const ui = {
 
 // --- THREE.JS SCENE SETUP ---
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x3a220f);
-scene.fog = new THREE.FogExp2(0x3a220f, 0.022);
+const fogColor = 0x472e19;
+scene.background = new THREE.Color(fogColor);
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 180);
+// Thick Atmospheric Dust Fog
+scene.fog = new THREE.FogExp2(fogColor, 0.018);
+
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 // Lighting
-const ambientLight = new THREE.AmbientLight(0xffaa55, 0.55);
+const ambientLight = new THREE.AmbientLight(0xffb870, 0.6);
 scene.add(ambientLight);
 
-const dirLight = new THREE.DirectionalLight(0xff8833, 0.8);
+const dirLight = new THREE.DirectionalLight(0xff8833, 0.85);
 dirLight.position.set(50, 70, 30);
 scene.add(dirLight);
 
@@ -185,16 +193,16 @@ function initMirror() {
 }
 
 // Sun Visual
-const sunGeo = new THREE.SphereGeometry(12, 16, 16);
+const sunGeo = new THREE.SphereGeometry(14, 16, 16);
 const sunMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
 const sun = new THREE.Mesh(sunGeo, sunMat);
-sun.position.set(60, 50, -100);
+sun.position.set(60, 45, -110);
 scene.add(sun);
 
 // --- CONTROLS ---
 let pitch = 0, yaw = 0;
 const PI_2 = Math.PI / 2;
-const keys = { w: false, a: false, s: false, d: false, z: false, e: false, h: false };
+const keys = { w: false, a: false, s: false, d: false, z: false, e: false, h: false, space: false };
 let playerPos = new THREE.Vector3(0, 1.7, 110);
 camera.position.copy(playerPos);
 
@@ -214,6 +222,7 @@ document.addEventListener('keydown', (e) => {
     if(e.code === 'KeyA') keys.a = true;
     if(e.code === 'KeyS') keys.s = true;
     if(e.code === 'KeyD') keys.d = true;
+    if(e.code === 'Space') { if (isGrounded && !inCar) { velocityY = jumpStrength; isGrounded = false; } keys.space = true; }
     if(e.code === 'KeyZ') { if (!keys.z) handleZPress(); keys.z = true; }
     if(e.code === 'KeyE') { if (!keys.e) handleEPress(); keys.e = true; }
     if(e.code === 'KeyH') { if (!keys.h) showHint(); keys.h = true; }
@@ -223,6 +232,7 @@ document.addEventListener('keyup', (e) => {
     if(e.code === 'KeyA') keys.a = false;
     if(e.code === 'KeyS') keys.s = false;
     if(e.code === 'KeyD') keys.d = false;
+    if(e.code === 'Space') keys.space = false;
     if(e.code === 'KeyZ') keys.z = false;
     if(e.code === 'KeyE') keys.e = false;
     if(e.code === 'KeyH') keys.h = false;
@@ -235,7 +245,7 @@ ui.start.addEventListener('click', () => {
     document.getElementById('crosshair').style.display = 'block';
     document.getElementById('status-hud').style.display = 'block';
     document.getElementById('inventory-hud').style.display = 'block';
-    flashText("Entered Dense Desert Sector. Press [H] for hints.");
+    flashText("Follow the Dark Brown Path. Press [Space] to Jump.");
 });
 
 document.body.addEventListener('click', () => {
@@ -258,6 +268,53 @@ const matGlass = new THREE.MeshLambertMaterial({ color: 0x99aa88, transparent: t
 const matInsect = new THREE.MeshLambertMaterial({ color: 0x14100c });
 const matUniform = new THREE.MeshLambertMaterial({ color: 0x47321d });
 
+// Ground Terrain & Dunes
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(280, 320), new THREE.MeshLambertMaterial({ color: 0xb58852 }));
+ground.rotation.x = -Math.PI / 2; scene.add(ground);
+
+function createRollingDunes() {
+    const duneMat = new THREE.MeshLambertMaterial({ color: 0xa0713b });
+    const dunePositions = [
+        {x: -100, z: -100, r: 35, h: 12}, {x: 100, z: -90, r: 40, h: 15},
+        {x: -110, z: 80, r: 38, h: 14}, {x: 100, z: 90, r: 45, h: 18},
+        {x: 0, z: -150, r: 50, h: 22}, {x: 0, z: 150, r: 45, h: 16}
+    ];
+    
+    dunePositions.forEach(d => {
+        let dune = new THREE.Mesh(new THREE.ConeGeometry(d.r, d.h, 12), duneMat);
+        dune.position.set(d.x, d.h / 2 - 1, d.z);
+        scene.add(dune);
+    });
+}
+createRollingDunes();
+
+// --- DARK BROWN GUIDANCE PATH ---
+function createBrownPath() {
+    const pathMat = new THREE.MeshLambertMaterial({ color: 0x362112, polygonOffset: true, polygonOffsetFactor: -1 });
+    
+    // Path segments connecting key areas (Spawn -> Precinct -> Tent -> Buttons -> Exit Gate)
+    const segments = [
+        // Main Spine (Spawn to Gate)
+        { x: 0, z: -12.5, w: 7, d: 245 },
+        // Branch to Campsite / Key Tent
+        { x: -11, z: -26, w: 22, d: 6 },
+        // Branch to Button 3 (East Sector)
+        { x: 22, z: -26, w: 44, d: 6 },
+        // Branch to Button 4 (West Sector)
+        { x: -44, z: -26, w: 88, d: 6 },
+        // Path to Button 1 (North Clay Tower)
+        { x: -38, z: 27.5, w: 6, d: 55 }
+    ];
+
+    segments.forEach(s => {
+        let p = new THREE.Mesh(new THREE.PlaneGeometry(s.w, s.d), pathMat);
+        p.rotation.x = -Math.PI / 2;
+        p.position.set(s.x, 0.02, s.z);
+        scene.add(p);
+    });
+}
+createBrownPath();
+
 function addCollider(x, z, w, d, ref = null) {
     let col = { minX: x - w/2, maxX: x + w/2, minZ: z - d/2, maxZ: z + d/2, ref: ref };
     solidWalls.push(col);
@@ -268,10 +325,6 @@ function removeCollider(ref) {
     const idx = solidWalls.findIndex(c => c.ref === ref);
     if (idx > -1) solidWalls.splice(idx, 1);
 }
-
-// Ground
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(240, 280), new THREE.MeshLambertMaterial({ color: 0xb58852 }));
-ground.rotation.x = -Math.PI / 2; scene.add(ground);
 
 // Outer Perimeter
 const h = 20;
@@ -452,7 +505,7 @@ function showHint() {
         let pos = b.position;
         let cardDir = pos.z < camera.position.z ? "NORTH" : "SOUTH";
         cardDir += pos.x < camera.position.x ? "-WEST" : "-EAST";
-        flashText(`HINT: Unpressed Sandstone Button towards ${cardDir}!`);
+        flashText(`HINT: Unpressed Sandstone Button towards ${cardDir}! Follow the brown path.`);
     } else {
         flashText("HINT: All 4 Buttons activated! Escape through Northern Gate!");
     }
@@ -526,7 +579,7 @@ function handleZPress() {
             gateGroup.position.y += 2.2;
 
             if (buttonsPressed === 4) {
-                flashText("NORTHERN BONE GATE RAISED! ESCAPE!");
+                flashText("NORTHERN GATE RAISED! ESCAPE!");
                 solidWalls.splice(solidWalls.findIndex(w => w.minZ === -135), 1);
             }
         }
@@ -613,7 +666,7 @@ function animate() {
         ui.dashFuel.innerText = Math.floor(carFuel);
         ui.carSpeedHud.innerText = Math.abs(Math.floor(carSpeed * 3));
     }
-    // On-foot movement
+    // On-foot movement & Jumping Physics
     else if (document.pointerLockElement === document.body && !isReadingDiary) {
         let dirX = Number(keys.d) - Number(keys.a);
         let dirZ = Number(keys.w) - Number(keys.s);
@@ -632,6 +685,17 @@ function animate() {
 
         let nextZ = camera.position.z + moveVec.z * speed * dt;
         if (!checkCollisions(new THREE.Vector3(camera.position.x, camera.position.y, nextZ))) camera.position.z = nextZ;
+
+        // Apply Vertical Gravity & Jump Mechanics
+        if (!isGrounded) {
+            velocityY -= gravity * dt;
+            camera.position.y += velocityY * dt;
+            if (camera.position.y <= 1.7) {
+                camera.position.y = 1.7;
+                velocityY = 0;
+                isGrounded = true;
+            }
+        }
     }
 
     // AI Guard movement
