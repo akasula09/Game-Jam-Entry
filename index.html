@@ -281,6 +281,10 @@ let smilerAttackTime = 0;
 let doorFallen = false;
 let barrierFallen = false;
 
+// Physics / Jump state
+let verticalVelocity = 0;
+let isGrounded = true;
+
 // --- CONFIG & DOM ---
 const ui = {
     start: document.getElementById('start-screen'),
@@ -321,6 +325,7 @@ scene.add(ambientLight);
 const moonLight = new THREE.DirectionalLight(0x6688aa, 0.5);
 moonLight.position.set(10, 20, 10);
 scene.add(moonLight);
+
 const houseLight = new THREE.PointLight(0xffa500, 0.8, 15);
 houseLight.position.set(0, 2, -15);
 scene.add(houseLight);
@@ -337,12 +342,11 @@ const guideArrow = new THREE.Mesh(arrowGeo, arrowMat);
 guideArrow.visible = false;
 scene.add(guideArrow);
 
-// --- CUSTOM CONTROLS & MOVEMENT ---
+// --- CONTROLS & MOVEMENT ---
 let pitch = 0;
 let yaw = 0;
 const PI_2 = Math.PI / 2;
-const keys = { w: false, a: false, s: false, d: false, z: false };
-const velocity = new THREE.Vector3();
+const keys = { w: false, a: false, s: false, d: false, z: false, space: false };
 const direction = new THREE.Vector3();
 let speed = 6.0;
 let smilerSpeed = 2.0;
@@ -366,6 +370,13 @@ document.addEventListener('keydown', (e) => {
     if(e.code === 'KeyA') keys.a = true;
     if(e.code === 'KeyS') keys.s = true;
     if(e.code === 'KeyD') keys.d = true;
+    if(e.code === 'Space') {
+        if(isGrounded && currentState !== STATE.DEAD) {
+            verticalVelocity = 5.0; // Jump impulse
+            isGrounded = false;
+        }
+        keys.space = true;
+    }
     if(e.code === 'KeyZ') {
         if (!keys.z) handleZPress();
         keys.z = true;
@@ -376,6 +387,7 @@ document.addEventListener('keyup', (e) => {
     if(e.code === 'KeyA') keys.a = false;
     if(e.code === 'KeyS') keys.s = false;
     if(e.code === 'KeyD') keys.d = false;
+    if(e.code === 'Space') keys.space = false;
     if(e.code === 'KeyZ') keys.z = false;
 });
 
@@ -404,37 +416,27 @@ function addWallCollider(x, z, w, d) {
     });
 }
 
-// GROUND & OUTSIDE TERRAIN (Split around House footprint: x:-5..5, z:-20..-10)
+// Flat Ground Level
 const groundMat = new THREE.MeshLambertMaterial({ color: 0x112211 });
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.position.set(0, 0, 0);
+scene.add(ground);
 
-function makeTerrainPlane(x, z, w, d) {
-    let p = new THREE.Mesh(new THREE.PlaneGeometry(w, d), groundMat);
-    p.rotation.x = -Math.PI / 2;
-    p.position.set(x, 0, z);
-    scene.add(p);
-}
-// 4 outer ground quadrants surrounding the house
-makeTerrainPlane(0, 40, 200, 100);       // North ground
-makeTerrainPlane(0, -60, 200, 80);       // South ground
-makeTerrainPlane(-52.5, -15, 95, 10);    // West ground
-makeTerrainPlane(52.5, -15, 95, 10);     // East ground
-
-// HOUSE FLOORING / BASEMENT CEILING (WITH TRAPDOOR HOLE)
+// House Floor (Thin flat overlay with cutout hole for trapdoor at x:-2..0, z:-16..-14)
 const woodFloorMat = new THREE.MeshLambertMaterial({ color: 0x3d2817 });
-
-function makeHouseFloorSection(x, z, w, d) {
-    let f = new THREE.Mesh(new THREE.BoxGeometry(w, 0.2, d), woodFloorMat);
-    f.position.set(x, -0.1, z);
+function makeFloorTile(x, z, w, d) {
+    let f = new THREE.Mesh(new THREE.PlaneGeometry(w, d), woodFloorMat);
+    f.rotation.x = -Math.PI / 2;
+    f.position.set(x, 0.001, z);
     scene.add(f);
 }
-// House area: x: -4.5 to 4.5, z: -19.5 to -10.5
-// Trapdoor cutout hole: x: -2 to 0, z: -16 to -14
-makeHouseFloorSection(-3.25, -15, 2.5, 9);  // Left floor section
-makeHouseFloorSection(2.25, -15, 4.5, 9);   // Right floor section
-makeHouseFloorSection(-1, -17.75, 2, 3.5);  // Back floor section
-makeHouseFloorSection(-1, -12.25, 2, 3.5);  // Front floor section
+makeFloorTile(-3.25, -15, 2.5, 9);  // Left
+makeFloorTile(2.25, -15, 4.5, 9);   // Right
+makeFloorTile(-1, -17.75, 2, 3.5);  // Back
+makeFloorTile(-1, -12.25, 2, 3.5);  // Front
 
-// Forest (Trees)
+// Forest Trees
 const trunkGeo = new THREE.CylinderGeometry(0.3, 0.4, 3);
 const trunkMat = new THREE.MeshLambertMaterial({ color: 0x3d2817 });
 const leavesGeo = new THREE.ConeGeometry(1.5, 4);
@@ -506,7 +508,7 @@ roof.position.set(0, 5.5, -15);
 roof.rotation.y = Math.PI/4;
 scene.add(roof);
 
-// Door & Barricade Setup
+// Door Setup
 const doorPivot = new THREE.Group();
 doorPivot.position.set(-1.25, 0, -10);
 const doorGeo = new THREE.BoxGeometry(2.5, 3.8, 0.2);
@@ -532,10 +534,8 @@ for(let i=0; i<4; i++) {
 barricadeGroup.visible = false;
 scene.add(barricadeGroup);
 
-// House Furniture
-const bedMat = new THREE.MeshLambertMaterial({ color: 0x223355 });
-const bedGeo = new THREE.BoxGeometry(3, 1, 5);
-const bed = new THREE.Mesh(bedGeo, bedMat);
+// Furniture
+const bed = new THREE.Mesh(new THREE.BoxGeometry(3, 1, 5), new THREE.MeshLambertMaterial({ color: 0x223355 }));
 bed.position.set(-2.5, 0.5, -17);
 scene.add(bed); addWallCollider(-2.5, -17, 3, 5);
 
@@ -544,50 +544,40 @@ table.position.set(2.5, 0.6, -18);
 scene.add(table); addWallCollider(2.5, -18, 2, 2);
 
 // TRAPDOOR & BASEMENT SYSTEM
-// Trapdoor over hole at (-1, 0.02, -15)
 const trapPivot = new THREE.Group();
-trapPivot.position.set(-1, 0.02, -16);
-const trapMesh = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 2), new THREE.MeshLambertMaterial({ color: 0x3a2510 }));
+trapPivot.position.set(-1, 0.01, -16);
+const trapMesh = new THREE.Mesh(new THREE.BoxGeometry(2, 0.05, 2), new THREE.MeshLambertMaterial({ color: 0x3a2510 }));
 trapMesh.position.set(0, 0, 1);
 trapPivot.add(trapMesh);
 scene.add(trapPivot);
 trapMesh.userData = { type: 'trapdoor' };
 interactables.push(trapMesh);
 
-// Basement Enclosure (Built beneath house)
+// Basement Enclosure (-4m deep)
 const basementMat = new THREE.MeshLambertMaterial({ color: 0x1f1a14 });
-
-// Basement Floor
-const bFloor = new THREE.Mesh(new THREE.BoxGeometry(9.5, 0.2, 9.5), basementMat);
-bFloor.position.set(0, -4.1, -15);
+const bFloor = new THREE.Mesh(new THREE.PlaneGeometry(9.5, 9.5), basementMat);
+bFloor.rotation.x = -Math.PI / 2;
+bFloor.position.set(0, -4.0, -15);
 scene.add(bFloor);
 
-// Basement Walls
 const bWallB = new THREE.Mesh(new THREE.BoxGeometry(9.5, 4, 0.4), basementMat); bWallB.position.set(0, -2, -19.5); scene.add(bWallB);
 const bWallF = new THREE.Mesh(new THREE.BoxGeometry(9.5, 4, 0.4), basementMat); bWallF.position.set(0, -2, -10.5); scene.add(bWallF);
 const bWallL = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4, 9.5), basementMat); bWallL.position.set(-4.5, -2, -15); scene.add(bWallL);
 const bWallR = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4, 9.5), basementMat); bWallR.position.set(4.5, -2, -15); scene.add(bWallR);
 
-// Shaft Trim around trapdoor hole
-const shaftWallL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.8, 2), basementMat); shaftWallL.position.set(-2, -0.4, -15); scene.add(shaftWallL);
-const shaftWallR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.8, 2), basementMat); shaftWallR.position.set(0, -0.4, -15); scene.add(shaftWallR);
-const shaftWallB = new THREE.Mesh(new THREE.BoxGeometry(2, 0.8, 0.1), basementMat); shaftWallB.position.set(-1, -0.4, -16); scene.add(shaftWallB);
-const shaftWallF = new THREE.Mesh(new THREE.BoxGeometry(2, 0.8, 0.1), basementMat); shaftWallF.position.set(-1, -0.4, -14); scene.add(shaftWallF);
-
-// Basement Ladder
+// Ladder
 const ladderMat = new THREE.MeshLambertMaterial({ color: 0x553311 });
 for(let y=0; y<8; y++) {
     let rung = new THREE.Mesh(new THREE.BoxGeometry(1, 0.08, 0.08), ladderMat);
-    rung.position.set(-0.8, -3.8 + y*0.5, -14.1);
+    rung.position.set(-1.0, -3.8 + y*0.5, -14.1);
     scene.add(rung);
 }
 
-// Basement Table 1 (Holds Axe)
+// Basement Tables & Items
 const bTable1 = new THREE.Mesh(new THREE.BoxGeometry(2, 1.2, 1.5), ladderMat);
 bTable1.position.set(-3.2, -3.4, -15);
 scene.add(bTable1);
 
-// Axe Model on Table 1
 const axeGroup = new THREE.Group();
 const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.2), trunkMat);
 handle.rotation.z = Math.PI / 2;
@@ -600,12 +590,10 @@ scene.add(axeGroup);
 interactables.push(head);
 head.userData = { type: 'axe' };
 
-// Basement Table 2 (Holds Note & Hand Mirror)
 const bTable2 = new THREE.Mesh(new THREE.BoxGeometry(2, 1.2, 1.5), ladderMat);
 bTable2.position.set(3.2, -3.4, -15);
 scene.add(bTable2);
 
-// Basement Note
 const note3 = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.5), new THREE.MeshBasicMaterial({ color: 0xffffff }));
 note3.rotation.x = -Math.PI / 2;
 note3.position.set(3.0, -2.79, -15);
@@ -613,7 +601,6 @@ note3.userData = { type: 'note3' };
 scene.add(note3);
 interactables.push(note3);
 
-// Hand Mirror Model on Table 2
 const mirrorGroup = new THREE.Group();
 const mHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5), ladderMat);
 const mFrame = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.04, 16), new THREE.MeshStandardMaterial({ color: 0xaa8833 }));
@@ -629,17 +616,14 @@ interactables.push(mGlass);
 mGlass.userData = { type: 'mirror' };
 
 // Notes (Two Halves)
-const noteGeo = new THREE.PlaneGeometry(0.4, 0.5);
-const noteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-
-const note1 = new THREE.Mesh(noteGeo, noteMat);
+const note1 = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.5), new THREE.MeshBasicMaterial({ color: 0xffffff }));
 note1.rotation.x = -Math.PI / 2;
 note1.position.set(2.5, 1.21, -18);
 note1.userData = { type: 'note1' };
 scene.add(note1);
 interactables.push(note1);
 
-const note2 = new THREE.Mesh(noteGeo, noteMat);
+const note2 = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.5), new THREE.MeshBasicMaterial({ color: 0xffffff }));
 note2.rotation.x = -Math.PI / 2;
 note2.position.set(-2.5, 1.01, -18.5);
 note2.userData = { type: 'note2' };
@@ -710,11 +694,11 @@ smiler.userData = { type: 'smiler' };
 const boxPieces = [];
 
 // --- LOGIC / FLOW ---
-let playerHeight = 1.7;
-camera.position.set(0, playerHeight, 0);
+let playerHeightOffset = 1.7;
+camera.position.set(0, playerHeightOffset, 0);
 
 function startWakingSequence() {
-    playerHeight = 0.2;
+    playerHeightOffset = 0.2;
     setTimeout(() => {
         ui.lidTop.style.height = '20%';
         ui.lidBottom.style.height = '20%';
@@ -725,9 +709,9 @@ function startWakingSequence() {
                 ui.lidTop.style.height = '0%';
                 ui.lidBottom.style.height = '0%';
                 let standInterval = setInterval(() => {
-                    playerHeight += 0.05;
-                    if(playerHeight >= 1.7) {
-                        playerHeight = 1.7;
+                    playerHeightOffset += 0.05;
+                    if(playerHeightOffset >= 1.7) {
+                        playerHeightOffset = 1.7;
                         clearInterval(standInterval);
                         currentState = STATE.FIND_KEY;
                         timeInState = 0;
@@ -817,7 +801,6 @@ function handleZPress() {
                 return;
             }
             if (!isDoorBarricaded && hasWood && !doorOpen) {
-                // Barricade door
                 isDoorBarricaded = true;
                 barricadeGroup.visible = true;
                 flashText("Door Barricaded!");
@@ -907,13 +890,13 @@ function handleZPress() {
         else if (type === 'trapdoor') {
             trapdoorOpen = !trapdoorOpen;
             let targetRot = trapdoorOpen ? Math.PI / 1.8 : 0;
-            let targetY = trapdoorOpen ? 0.8 : 0.02;
+            let targetY = trapdoorOpen ? 0.8 : 0.01;
             let anim = setInterval(() => {
                 trapPivot.rotation.x += (trapdoorOpen ? 0.05 : -0.05);
                 trapPivot.position.y += (trapdoorOpen ? 0.04 : -0.04);
                 if ((trapdoorOpen && trapPivot.rotation.x >= targetRot) || (!trapdoorOpen && trapPivot.rotation.x <= 0)) {
                     trapPivot.rotation.x = trapdoorOpen ? targetRot : 0;
-                    trapPivot.position.y = trapdoorOpen ? targetY : 0.02;
+                    trapPivot.position.y = trapdoorOpen ? targetY : 0.01;
                     clearInterval(anim);
                 }
             }, 16);
@@ -966,7 +949,7 @@ function startSmilerCountdown() {
     }, 1000);
 }
 
-// Groq API Logic
+// Groq API Query
 ui.inputBtn.addEventListener('click', async () => {
     let q = ui.inputField.value.trim();
     if(!q) q = "What are you?";
@@ -1002,15 +985,15 @@ let activeInteractable = null;
 let lastTime = performance.now();
 
 function checkCollisions(newPos) {
-    let r = 0.5;
-    // Allow falling through trapdoor shaft
+    let r = 0.4;
+    // Trapdoor Hole region check (x: -2 to 0, z: -16 to -14)
     if (trapdoorOpen && newPos.x > -2 && newPos.x < 0 && newPos.z > -16 && newPos.z < -14) {
         return false;
     }
     for(let w of solidWalls) {
         if (newPos.x + r > w.minX && newPos.x - r < w.maxX &&
             newPos.z + r > w.minZ && newPos.z - r < w.maxZ) {
-            if (newPos.y > -0.5) return true;
+            if (newPos.y > -1.0) return true;
         }
     }
     return false;
@@ -1082,17 +1065,25 @@ function animate() {
 
     updateGuidanceAndHints(dt);
 
-    // Player Gravity / Drop into Cellar Logic
-    let currentFloor = 1.7;
-    if (camera.position.x > -2 && camera.position.x < 0 && camera.position.z > -16 && camera.position.z < -14 && trapdoorOpen) {
-        currentFloor = -2.3; // Drop down into cellar level
-    } else if (camera.position.y < 0) {
-        currentFloor = -2.3;
+    // Gravity & Ground Level physics
+    let inHoleArea = (trapdoorOpen && camera.position.x > -2 && camera.position.x < 0 && camera.position.z > -16 && camera.position.z < -14);
+    let floorHeight = inHoleArea ? -2.3 : (camera.position.y < -1.0 ? -2.3 : 1.7);
+
+    // Ladder Auto-Climb
+    let nearLadder = (camera.position.x > -1.5 && camera.position.x < -0.5 && camera.position.z > -14.8 && camera.position.z < -13.8);
+    if (nearLadder && keys.w) {
+        floorHeight = 1.7;
+        camera.position.y = Math.min(1.7, camera.position.y + 3.0 * dt);
     }
-    
-    if (camera.position.y > currentFloor) {
-        camera.position.y -= 9.8 * dt * 0.8;
-        if (camera.position.y < currentFloor) camera.position.y = currentFloor;
+
+    // Apply Jump / Gravity physics
+    verticalVelocity -= 15.0 * dt;
+    camera.position.y += verticalVelocity * dt;
+
+    if (camera.position.y <= floorHeight) {
+        camera.position.y = floorHeight;
+        verticalVelocity = 0;
+        isGrounded = true;
     }
 
     // Player Movement
