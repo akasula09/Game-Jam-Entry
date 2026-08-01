@@ -500,7 +500,7 @@ interactables.push(note1);
 
 const note2 = new THREE.Mesh(noteGeo, noteMat);
 note2.rotation.x = -Math.PI / 2;
-note2.position.set(-2.5, 0.05, -18.5); // Hidden under the bed
+note2.position.set(-2.5, 1.01, -18.5); // Placed visibly on top of the bed mattress
 note2.userData = { type: 'note2' };
 scene.add(note2);
 
