@@ -3,30 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Level 2: Inside Smiler</title>
+    <title>Level 2: The Insectoid Precinct</title>
     <style>
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background-color: #050201;
+            overflow: hidden; background-color: #030201;
             font-family: 'Courier New', Courier, monospace; user-select: none;
         }
         #game-canvas { display: block; width: 100%; height: 100%; }
         .overlay { position: absolute; pointer-events: none; display: none; z-index: 50; }
-        #crosshair { top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255, 180, 120, 0.7); font-size: 20px; display: block; }
-        #interact-prompt { top: 55%; left: 50%; transform: translateX(-50%); color: #ffe0b2; font-size: 20px; text-shadow: 2px 2px 0px #000; }
-        #flash-text { top: 20%; left: 50%; transform: translateX(-50%); color: #ffaa55; font-size: 28px; text-shadow: 3px 3px 0px #000; opacity: 0; transition: opacity 0.5s; text-align: center; display: block; }
-        #hint-text { bottom: 10%; left: 50%; transform: translateX(-50%); color: #d1b894; font-size: 16px; background: rgba(15, 10, 5, 0.9); border: 1px solid #7a5c37; padding: 10px 20px; border-radius: 4px; opacity: 0; transition: opacity 1s; display: block; }
-        #diary-view { top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 5, 2, 0.92); display: none; align-items: center; justify-content: center; flex-direction: column; z-index: 60; pointer-events: auto; }
-        #diary-view .paper { background: #d4b185; color: #2b1704; padding: 35px; border-radius: 3px; max-width: 500px; font-family: 'Georgia', serif; line-height: 1.6; border: 2px solid #8c5d2e; }
-        #diary-view h3 { margin-top: 0; color: #591d0b; border-bottom: 1px dashed #7a461e; }
-        #diary-view .sub { color: #bbb; margin-top: 15px; font-size: 14px; font-family: 'Courier New', Courier, monospace; }
-        #status-hud { top: 20px; left: 20px; color: #e0aa6b; font-size: 18px; display: block; text-shadow: 1px 1px 2px #000; }
-        #inventory-hud { top: 50px; left: 20px; color: #ffca85; font-size: 16px; display: block; text-shadow: 1px 1px 2px #000; }
+        #crosshair { top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ffaa55; font-size: 24px; display: block; }
+        #interact-prompt { top: 58%; left: 50%; transform: translateX(-50%); color: #fff3e0; font-size: 18px; text-shadow: 2px 2px 0px #000; background: rgba(0,0,0,0.6); padding: 5px 12px; border-radius: 4px; }
+        #flash-text { top: 15%; left: 50%; transform: translateX(-50%); color: #ffaa33; font-size: 26px; text-shadow: 3px 3px 0px #000; opacity: 0; transition: opacity 0.5s; text-align: center; display: block; }
+        #hint-text { bottom: 8%; left: 50%; transform: translateX(-50%); color: #ffdca8; font-size: 15px; background: rgba(15, 10, 5, 0.9); border: 1px solid #aa7733; padding: 8px 18px; border-radius: 4px; opacity: 0; transition: opacity 0.5s; display: block; text-align: center; }
+        
+        #status-hud { top: 20px; left: 20px; color: #ffaa55; font-size: 16px; display: block; text-shadow: 1px 1px 2px #000; }
+        #inventory-hud { top: 45px; left: 20px; color: #ffd7a8; font-size: 15px; display: block; text-shadow: 1px 1px 2px #000; }
+        #car-hud { top: 70px; left: 20px; color: #55ff55; font-size: 15px; display: none; text-shadow: 1px 1px 2px #000; }
+
+        /* Vehicle Cockpit HUD Overlays */
+        #windshield-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            border: 35px solid #1a1a1a; border-bottom: 90px solid #0d0d0d;
+            box-sizing: border-box; pointer-events: none; display: none; z-index: 40;
+        }
+        #dash-reflection {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 90px;
+            background: linear-gradient(to top, #0a0a0a, #1f1f1f);
+            border-top: 3px solid #333; display: flex; justify-content: space-around; align-items: center; color: #00ff66; font-family: monospace; padding: 0 50px; box-sizing: border-box;
+        }
+
+        #diary-view { top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 3, 1, 0.93); display: none; align-items: center; justify-content: center; flex-direction: column; z-index: 60; pointer-events: auto; }
+        #diary-view .paper { background: #d9c0a3; color: #1c0f04; padding: 30px; border-radius: 4px; max-width: 480px; font-family: 'Georgia', serif; line-height: 1.5; border: 2px solid #6e4623; }
+        #diary-view h3 { margin-top: 0; color: #73260d; border-bottom: 1px dashed #7a461e; }
+        #diary-view .sub { color: #aaa; margin-top: 12px; font-size: 13px; }
+
         #screen-overlay { top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; pointer-events: auto; }
-        #screen-overlay h1 { color: #ff4400; font-size: 2.5vw; text-shadow: 0 0 15px #ff1100; text-align: center; margin-bottom: 25px; white-space: pre-line; }
-        #action-btn { padding: 15px 35px; font-size: 20px; font-family: 'Courier New', Courier, monospace; background: #1c0d02; color: #ffaa55; border: 2px solid #a85513; cursor: pointer; }
+        #screen-overlay h1 { color: #ff3300; font-size: 2.5vw; text-shadow: 0 0 15px #ff1100; text-align: center; margin-bottom: 25px; white-space: pre-line; }
+        #action-btn { padding: 14px 30px; font-size: 18px; font-family: 'Courier New', Courier, monospace; background: #240c03; color: #ffaa55; border: 2px solid #a85513; cursor: pointer; }
         #action-btn:hover { background: #883300; color: #fff; }
-        .click-to-start { position: absolute; top:0; left:0; width:100%; height:100%; background: #0d0603; color: #e0aa6b; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; cursor: pointer; text-align: center; }
+
+        .click-to-start { position: absolute; top:0; left:0; width:100%; height:100%; background: #080402; color: #ffaa55; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; cursor: pointer; text-align: center; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -34,17 +51,31 @@
 <body>
 
     <div id="start-screen" class="click-to-start">
-        <h2>LEVEL 2: AWAKE IN THE DESERT CITY</h2>
-        <p style="font-size: 16px; color: #a88158;">You are deep inside Smiler.<br>Find 4 sandstone buttons to raise the gate.</p>
-        <span style="font-size: 18px; border: 1px solid #e0aa6b; padding: 10px 20px; margin-top: 20px;">Click to Begin</span>
+        <h2>LEVEL 2: URBAN ORGANISM PRECINCT</h2>
+        <p style="font-size: 15px; color: #b89168; max-width: 500px; line-height: 1.6;">
+            Navigate the dense brick and concrete alleys.<br>
+            Locate 4 Sandstone Buttons to break the Northern Bone Gate.<br>
+            Drive the Cruiser [E]. Avoid the Guarded Police Precinct.<br>
+            Press [H] anytime for a target hint.
+        </p>
+        <span style="font-size: 18px; border: 1px solid #ffaa55; padding: 10px 24px; margin-top: 15px;">Click to Enter City</span>
     </div>
 
     <div id="crosshair" class="overlay">+</div>
     <div id="status-hud" class="overlay">Gate Buttons: <span id="button-count">0</span>/4</div>
     <div id="inventory-hud" class="overlay">Keys: <span id="key-status">None</span></div>
+    <div id="car-hud" class="overlay">Fuel: <span id="fuel-count">100</span>% | Controls: [W/S] Gas/Brake, [A/D] Steer, [E] Exit</div>
     <div id="interact-prompt" class="overlay"></div>
     <div id="flash-text" class="overlay"></div>
     <div id="hint-text" class="overlay"></div>
+
+    <div id="windshield-overlay">
+        <div id="dash-reflection">
+            <span>SPEED: <span id="car-speed">0</span> MPH</span>
+            <span>POLICE CRUISER UNIT-04</span>
+            <span>FUEL: <span id="dash-fuel">100</span>%</span>
+        </div>
+    </div>
 
     <div id="diary-view" class="overlay">
         <div class="paper">
@@ -62,33 +93,32 @@
 <script>
 // --- AUDIO ENGINE ---
 let audioInitialized = false;
-let synthHeartbeat, synthAmbience, synthStalkerSound;
+let synthHeartbeat, synthAmbience, synthSiren, synthEngine;
 
 function initAudio() {
     if (audioInitialized) return;
     Tone.start();
     synthHeartbeat = new Tone.MembraneSynth().toDestination();
-    synthHeartbeat.volume.value = -10;
+    synthHeartbeat.volume.value = -8;
     
-    const filter = new Tone.Filter(200, "lowpass").toDestination();
+    const filter = new Tone.Filter(180, "lowpass").toDestination();
     synthAmbience = new Tone.NoiseSynth({ noise: { type: "brown" }, envelope: { attack: 2, sustain: 1, release: 2 } }).connect(filter);
-    synthAmbience.volume.value = -18;
+    synthAmbience.volume.value = -20;
     synthAmbience.triggerAttack();
 
-    synthStalkerSound = new Tone.AMSynth().toDestination();
-    synthStalkerSound.volume.value = -14;
+    synthSiren = new Tone.Synth().toDestination();
+    synthSiren.volume.value = -16;
+
+    synthEngine = new Tone.Oscillator(60, "sawtooth").toDestination();
+    synthEngine.volume.value = -22;
     audioInitialized = true;
 }
 
-function playHeartbeat() {
+function playHeartbeat() { if (audioInitialized) synthHeartbeat.triggerAttackRelease("C1", "8n"); }
+function triggerDoorAlarm() {
     if (!audioInitialized) return;
-    synthHeartbeat.triggerAttackRelease("C1", "8n");
-    setTimeout(() => synthHeartbeat.triggerAttackRelease("A0", "8n"), 250);
-}
-
-function playStalkerGroan() {
-    if (!audioInitialized) return;
-    synthStalkerSound.triggerAttackRelease("E1", "0.4");
+    synthSiren.triggerAttackRelease("A4", "0.2");
+    setTimeout(() => synthSiren.triggerAttackRelease("E5", "0.3"), 200);
 }
 
 // --- GAME STATE ---
@@ -98,6 +128,12 @@ let isReadingDiary = false;
 let isGameOver = false;
 let isVictorious = false;
 let hintTimer = 0;
+
+// Driving state
+let inCar = false;
+let carFuel = 100.0;
+let carSpeed = 0.0;
+let carAngle = 0.0;
 
 const ui = {
     start: document.getElementById('start-screen'),
@@ -109,47 +145,66 @@ const ui = {
     diaryText: document.getElementById('diary-text'),
     btnCount: document.getElementById('button-count'),
     keyStatus: document.getElementById('key-status'),
+    carHud: document.getElementById('car-hud'),
+    fuelCount: document.getElementById('fuel-count'),
+    dashFuel: document.getElementById('dash-fuel'),
+    carSpeedHud: document.getElementById('car-speed'),
+    windshield: document.getElementById('windshield-overlay'),
     screenOverlay: document.getElementById('screen-overlay'),
     screenTitle: document.getElementById('screen-title'),
     actionBtn: document.getElementById('action-btn')
 };
 
-// --- THREE.JS SETUP ---
+// --- THREE.JS SCENE SETUP ---
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x120a04);
-scene.fog = new THREE.FogExp2(0x120a04, 0.022); // Dense fog for horror depth
+scene.background = new THREE.Color(0x090503);
+scene.fog = new THREE.FogExp2(0x090503, 0.028);
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 150);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 180);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
-const ambientLight = new THREE.AmbientLight(0xff9955, 0.35);
+const ambientLight = new THREE.AmbientLight(0xff9944, 0.4);
 scene.add(ambientLight);
 
-const sunLight = new THREE.DirectionalLight(0xff6622, 0.5);
-sunLight.position.set(30, 40, 20);
-scene.add(sunLight);
+const dirLight = new THREE.DirectionalLight(0xff7733, 0.6);
+dirLight.position.set(40, 60, 20);
+scene.add(dirLight);
 
-// Arrow Guidance
-const arrowGeo = new THREE.ConeGeometry(0.4, 1.2, 6);
-arrowGeo.rotateX(Math.PI);
-const guideArrow = new THREE.Mesh(arrowGeo, new THREE.MeshBasicMaterial({ color: 0xffa500, wireframe: true }));
-guideArrow.visible = false;
-scene.add(guideArrow);
+// --- REARVIEW MIRROR RENDER TARGET ---
+const mirrorRenderTarget = new THREE.WebGLRenderTarget(256, 128);
+const mirrorCamera = new THREE.PerspectiveCamera(60, 2, 0.1, 100);
+const mirrorGeo = new THREE.PlaneGeometry(1.2, 0.4);
+const mirrorMat = new THREE.MeshBasicMaterial({ map: mirrorRenderTarget.texture });
+const mirrorMesh = new THREE.Mesh(mirrorGeo, mirrorMat);
+mirrorMesh.position.set(0, 0.5, -0.9);
+mirrorMesh.visible = false;
+scene.add(mirrorMesh);
+
+// Biological Sky Strands
+function buildSkyDetails() {
+    const geo = new THREE.TorusGeometry(80, 1.2, 8, 30);
+    const mat = new THREE.MeshBasicMaterial({ color: 0x4a1805, wireframe: true });
+    for(let i=0; i<3; i++) {
+        let strand = new THREE.Mesh(geo, mat);
+        strand.rotation.set(Math.random()*3, Math.random()*3, Math.random()*3);
+        strand.position.set(0, 40, 0);
+        scene.add(strand);
+    }
+}
+buildSkyDetails();
 
 // --- CONTROLS ---
 let pitch = 0, yaw = 0;
 const PI_2 = Math.PI / 2;
-const keys = { w: false, a: false, s: false, d: false, z: false };
-let baseSpeed = 7.0;
-let currentSpeed = 7.0;
-let playerPos = new THREE.Vector3(0, 1.7, 100);
+const keys = { w: false, a: false, s: false, d: false, z: false, e: false, h: false };
+let playerPos = new THREE.Vector3(0, 1.7, 110);
 camera.position.copy(playerPos);
 
 document.addEventListener('mousemove', (e) => {
-    if (document.pointerLockElement === document.body && !isGameOver && !isVictorious && !isReadingDiary) {
+    if (document.pointerLockElement === document.body && !isGameOver && !isVictorious && !isReadingDiary && !inCar) {
         yaw -= e.movementX * 0.002;
         pitch -= e.movementY * 0.002;
         pitch = Math.max(-PI_2 + 0.1, Math.min(PI_2 - 0.1, pitch));
@@ -165,6 +220,8 @@ document.addEventListener('keydown', (e) => {
     if(e.code === 'KeyS') keys.s = true;
     if(e.code === 'KeyD') keys.d = true;
     if(e.code === 'KeyZ') { if (!keys.z) handleZPress(); keys.z = true; }
+    if(e.code === 'KeyE') { if (!keys.e) handleEPress(); keys.e = true; }
+    if(e.code === 'KeyH') { if (!keys.h) showHint(); keys.h = true; }
 });
 document.addEventListener('keyup', (e) => {
     if(e.code === 'KeyW') keys.w = false;
@@ -172,6 +229,8 @@ document.addEventListener('keyup', (e) => {
     if(e.code === 'KeyS') keys.s = false;
     if(e.code === 'KeyD') keys.d = false;
     if(e.code === 'KeyZ') keys.z = false;
+    if(e.code === 'KeyE') keys.e = false;
+    if(e.code === 'KeyH') keys.h = false;
 });
 
 ui.start.addEventListener('click', () => {
@@ -181,7 +240,7 @@ ui.start.addEventListener('click', () => {
     document.getElementById('crosshair').style.display = 'block';
     document.getElementById('status-hud').style.display = 'block';
     document.getElementById('inventory-hud').style.display = 'block';
-    flashText("Find 4 Sandstone Buttons to raise the Gate.");
+    flashText("Dense City Zone Entered. Press [H] for hints.");
 });
 
 document.body.addEventListener('click', () => {
@@ -190,12 +249,19 @@ document.body.addEventListener('click', () => {
     }
 });
 
-// --- WORLD BUILDER ---
+// --- WORLD DATA & MATERIALS ---
 const interactables = [];
 const solidWalls = [];
-const acidPools = [];
 const buttons = [];
 const stalkers = [];
+
+const matBrick = new THREE.MeshLambertMaterial({ color: 0x733722 });
+const matConcrete = new THREE.MeshLambertMaterial({ color: 0x4a4745 });
+const matSandstone = new THREE.MeshLambertMaterial({ color: 0x8c592b });
+const matDarkConcrete = new THREE.MeshLambertMaterial({ color: 0x242221 });
+const matGlass = new THREE.MeshLambertMaterial({ color: 0x6699aa, transparent: true, opacity: 0.5 });
+const matInsect = new THREE.MeshLambertMaterial({ color: 0x111111 });
+const matUniform = new THREE.MeshLambertMaterial({ color: 0x122340 });
 
 function addCollider(x, z, w, d, ref = null) {
     let col = { minX: x - w/2, maxX: x + w/2, minZ: z - d/2, maxZ: z + d/2, ref: ref };
@@ -208,59 +274,71 @@ function removeCollider(ref) {
     if (idx > -1) solidWalls.splice(idx, 1);
 }
 
-// Ground & Sandstone Materials
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(240, 280), new THREE.MeshLambertMaterial({ color: 0xaa7038 }));
+// Floor Base & Cracks
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(240, 280), new THREE.MeshLambertMaterial({ color: 0x1c1510 }));
 ground.rotation.x = -Math.PI / 2; scene.add(ground);
 
-const matSandstone = new THREE.MeshLambertMaterial({ color: 0x8c592b });
-const matDarkSandstone = new THREE.MeshLambertMaterial({ color: 0x5e3a1a });
-const matBone = new THREE.MeshLambertMaterial({ color: 0xc4b491 });
-const matCloth = new THREE.MeshLambertMaterial({ color: 0xa84125 });
-
-// Sidewalk Grid System
-function createSidewalk(x, z, w, d) {
-    const sw = new THREE.Mesh(new THREE.BoxGeometry(w, 0.15, d), matDarkSandstone);
-    sw.position.set(x, 0.075, z); scene.add(sw);
+function addGroundCracks() {
+    const crackMat = new THREE.MeshBasicMaterial({ color: 0x0a0502 });
+    for(let i=0; i<35; i++) {
+        let crack = new THREE.Mesh(new THREE.PlaneGeometry(Math.random()*4+2, 0.2), crackMat);
+        crack.rotation.x = -Math.PI / 2;
+        crack.rotation.z = Math.random()*Math.PI;
+        crack.position.set((Math.random()-0.5)*200, 0.01, (Math.random()-0.5)*240);
+        scene.add(crack);
+    }
 }
+addGroundCracks();
 
-// Outer Perimeter
-function createBoundary() {
-    const h = 12;
-    let n = new THREE.Mesh(new THREE.BoxGeometry(240, h, 4), matSandstone); n.position.set(0, h/2, -140); scene.add(n); addCollider(0, -140, 240, 4);
-    let s = new THREE.Mesh(new THREE.BoxGeometry(240, h, 4), matSandstone); s.position.set(0, h/2, 140); scene.add(s); addCollider(0, 140, 240, 4);
-    let e = new THREE.Mesh(new THREE.BoxGeometry(4, h, 280), matSandstone); e.position.set(120, h/2, 0); scene.add(e); addCollider(120, 0, 4, 280);
-    let w = new THREE.Mesh(new THREE.BoxGeometry(4, h, 280), matSandstone); w.position.set(-120, h/2, 0); scene.add(w); addCollider(-120, 0, 4, 280);
+// Boundary Walls
+function buildBoundaries() {
+    const h = 16;
+    let n = new THREE.Mesh(new THREE.BoxGeometry(240, h, 4), matConcrete); n.position.set(0, h/2, -140); scene.add(n); addCollider(0, -140, 240, 4);
+    let s = new THREE.Mesh(new THREE.BoxGeometry(240, h, 4), matConcrete); s.position.set(0, h/2, 140); scene.add(s); addCollider(0, 140, 240, 4);
+    let e = new THREE.Mesh(new THREE.BoxGeometry(4, h, 280), matConcrete); e.position.set(120, h/2, 0); scene.add(e); addCollider(120, 0, 4, 280);
+    let w = new THREE.Mesh(new THREE.BoxGeometry(4, h, 280), matConcrete); w.position.set(-120, h/2, 0); scene.add(w); addCollider(-120, 0, 4, 280);
 }
-createBoundary();
+buildBoundaries();
 
-// --- BUILDING BUILDER ENGINE ---
-function buildBuilding(x, z, width, depth, stories, isLocked = false, lockKeyId = null, diaryData = null, propType = null) {
-    const wallT = 0.6;
-    const storyH = 4.2;
-    const totalH = storyH * stories;
+// --- HIGH DENSITY ARCHITECTURE ---
+function buildComplexBuilding(x, z, width, depth, stories, matType, isLocked = false, lockKeyId = null, diaryData = null) {
+    const wallT = 0.7;
+    const storyH = 4.5;
+    const totalH = storyH * stories; // Matched height!
+    const mat = matType === 'brick' ? matBrick : (matType === 'concrete' ? matConcrete : matSandstone);
 
-    // Outer Walls
-    let back = new THREE.Mesh(new THREE.BoxGeometry(width, totalH, wallT), matSandstone); back.position.set(x, totalH/2, z - depth/2); scene.add(back); addCollider(x, z - depth/2, width, wallT);
-    let left = new THREE.Mesh(new THREE.BoxGeometry(wallT, totalH, depth), matSandstone); left.position.set(x - width/2, totalH/2, z); scene.add(left); addCollider(x - width/2, z, wallT, depth);
-    let right = new THREE.Mesh(new THREE.BoxGeometry(wallT, totalH, depth), matSandstone); right.position.set(x + width/2, totalH/2, z); scene.add(right); addCollider(x + width/2, z, wallT, depth);
+    // Exterior Walls
+    let back = new THREE.Mesh(new THREE.BoxGeometry(width, totalH, wallT), mat); back.position.set(x, totalH/2, z - depth/2); scene.add(back); addCollider(x, z - depth/2, width, wallT);
+    let left = new THREE.Mesh(new THREE.BoxGeometry(wallT, totalH, depth), mat); left.position.set(x - width/2, totalH/2, z); scene.add(left); addCollider(x - width/2, z, wallT, depth);
+    let right = new THREE.Mesh(new THREE.BoxGeometry(wallT, totalH, depth), mat); right.position.set(x + width/2, totalH/2, z); scene.add(right); addCollider(x + width/2, z, wallT, depth);
 
     // Front Wall with Doorway
-    let frontLeft = new THREE.Mesh(new THREE.BoxGeometry((width - 3)/2, totalH, wallT), matSandstone); frontLeft.position.set(x - (width/4 + 0.75), totalH/2, z + depth/2); scene.add(frontLeft); addCollider(x - (width/4 + 0.75), z + depth/2, (width - 3)/2, wallT);
-    let frontRight = new THREE.Mesh(new THREE.BoxGeometry((width - 3)/2, totalH, wallT), matSandstone); frontRight.position.set(x + (width/4 + 0.75), totalH/2, z + depth/2); scene.add(frontRight); addCollider(x + (width/4 + 0.75), z + depth/2, (width - 3)/2, wallT);
-    let lintel = new THREE.Mesh(new THREE.BoxGeometry(3, totalH - 3.5, wallT), matSandstone); lintel.position.set(x, 3.5 + (totalH - 3.5)/2, z + depth/2); scene.add(lintel);
+    let frontL = new THREE.Mesh(new THREE.BoxGeometry((width-3.2)/2, totalH, wallT), mat); frontL.position.set(x - (width/4 + 0.8), totalH/2, z + depth/2); scene.add(frontL); addCollider(x - (width/4 + 0.8), z + depth/2, (width-3.2)/2, wallT);
+    let frontR = new THREE.Mesh(new THREE.BoxGeometry((width-3.2)/2, totalH, matType), mat); frontR.position.set(x + (width/4 + 0.8), totalH/2, z + depth/2); scene.add(frontR); addCollider(x + (width/4 + 0.8), z + depth/2, (width-3.2)/2, wallT);
+    let lintel = new THREE.Mesh(new THREE.BoxGeometry(3.2, totalH - 3.8, wallT), mat); lintel.position.set(x, 3.8 + (totalH - 3.8)/2, z + depth/2); scene.add(lintel);
 
-    // Floors & Roof
+    // Floors & Reinforced Roof
     for(let i=1; i<=stories; i++) {
-        let fl = new THREE.Mesh(new THREE.BoxGeometry(width + 0.2, 0.3, depth + 0.2), matDarkSandstone);
+        let fl = new THREE.Mesh(new THREE.BoxGeometry(width - 0.2, 0.4, depth - 0.2), matDarkConcrete);
         fl.position.set(x, i * storyH, z); scene.add(fl);
     }
 
-    // Door with Collision Ref
-    const doorPivot = new THREE.Group(); doorPivot.position.set(x - 1.5, 0, z + depth/2);
-    const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(3, 3.5, 0.2), new THREE.MeshLambertMaterial({ color: isLocked ? 0x221105 : 0x5c3a1e }));
-    doorMesh.position.set(1.5, 1.75, 0); doorPivot.add(doorMesh); scene.add(doorPivot);
+    // Solid Non-Floating Stairs
+    if (stories > 1) {
+        for(let st=0; st<stories-1; st++) {
+            const stairBase = new THREE.Mesh(new THREE.BoxGeometry(2.2, storyH, depth/2), matDarkConcrete);
+            stairBase.position.set(x + width/2 - 1.5, (st + 0.5) * storyH, z - depth/4);
+            stairBase.rotation.x = Math.PI / 6;
+            scene.add(stairBase);
+            addCollider(x + width/2 - 1.5, z - depth/4, 2.2, depth/2);
+        }
+    }
 
-    const doorCol = addCollider(x, z + depth/2, 3, 0.5, doorMesh);
+    // Door Frame & Interactive Door
+    const doorPivot = new THREE.Group(); doorPivot.position.set(x - 1.6, 0, z + depth/2);
+    const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(3.2, 3.8, 0.25), new THREE.MeshLambertMaterial({ color: isLocked ? 0x1f0c02 : 0x4a2a11 }));
+    doorMesh.position.set(1.6, 1.9, 0); doorPivot.add(doorMesh); scene.add(doorPivot);
+    const doorCol = addCollider(x, z + depth/2, 3.2, 0.6, doorMesh);
 
     doorMesh.userData = { 
         type: 'door', pivot: doorPivot, open: false, moving: false, 
@@ -268,132 +346,179 @@ function buildBuilding(x, z, width, depth, stories, isLocked = false, lockKeyId 
     };
     interactables.push(doorMesh);
 
-    // Staircase for Multi-story
-    if (stories > 1) {
-        for(let st=0; st<stories-1; st++) {
-            for(let i=0; i<8; i++) {
-                let step = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.5, 0.5), matDarkSandstone);
-                step.position.set(x + width/2 - 1.2, 0.25 + st*storyH + i*0.5, (z - depth/2 + 1.2) + i*0.5); scene.add(step);
-            }
-        }
-    }
+    // Sidewalk Surrounding Building
+    const sw = new THREE.Mesh(new THREE.BoxGeometry(width + 4, 0.2, depth + 4), matDarkConcrete);
+    sw.position.set(x, 0.1, z); scene.add(sw);
 
-    // Interior Unique Props
-    if (propType === 'table') {
-        let tbl = new THREE.Mesh(new THREE.BoxGeometry(2, 0.8, 1.2), matDarkSandstone); tbl.position.set(x - 1.5, 0.4, z - 1); scene.add(tbl); addCollider(x - 1.5, z - 1, 2, 1.2);
-    } else if (propType === 'rubble') {
-        let rub = new THREE.Mesh(new THREE.DodecahedronGeometry(1.0), matSandstone); rub.position.set(x + 1, 0.5, z - 1); scene.add(rub); addCollider(x + 1, z - 1, 1.5, 1.5);
-    }
-
-    // Optional Diary
     if (diaryData) {
-        let diaryMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.7), new THREE.MeshBasicMaterial({ color: 0xffeedd }));
+        let diaryMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.8), new THREE.MeshBasicMaterial({ color: 0xfff0dd }));
         diaryMesh.rotation.x = -Math.PI / 2;
-        diaryMesh.position.set(x, (stories - 1) * storyH + 0.2, z);
+        diaryMesh.position.set(x, (stories - 1) * storyH + 0.25, z);
         diaryMesh.userData = { type: 'diary', title: diaryData.title, text: diaryData.text };
         scene.add(diaryMesh); interactables.push(diaryMesh);
     }
 
-    createSidewalk(x, z + depth/2 + 2, width + 4, 3);
     return { x, z, stories, topY: (stories - 1) * storyH };
 }
 
-// Tents / Campsites
-function buildTent(x, z, hasKey = false) {
-    const tentMat = new THREE.MeshLambertMaterial({ color: 0x73301a, side: THREE.DoubleSide });
-    const tentGeo = new THREE.ConeGeometry(3, 3, 4);
-    const tent = new THREE.Mesh(tentGeo, tentMat);
-    tent.position.set(x, 1.5, z); scene.add(tent); addCollider(x, z, 3, 3);
+// 1. POLICE STATION (CITY CENTER)
+const policeStationGroup = new THREE.Group();
+const psBody = new THREE.Mesh(new THREE.BoxGeometry(36, 10, 28), matConcrete); psBody.position.set(0, 5, 0); scene.add(psBody);
+addCollider(0, -13, 36, 2); addCollider(-17, 0, 2, 28); addCollider(17, 0, 2, 28); // Outer walls
+addCollider(-11, 14, 14, 2); addCollider(11, 14, 14, 2); // Front split walls
 
-    if (hasKey) {
-        const keyMesh = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.05, 8, 16), new THREE.MeshBasicMaterial({ color: 0xffd700 }));
-        keyMesh.position.set(x + 1.8, 0.2, z + 1.8); keyMesh.rotation.x = Math.PI / 2; scene.add(keyMesh);
-        keyMesh.userData = { type: 'key', keyId: 'brass_key' };
-        interactables.push(keyMesh);
-    }
+// Police Sign
+const psSign = new THREE.Mesh(new THREE.BoxGeometry(12, 2, 0.5), new THREE.MeshBasicMaterial({ color: 0x113366 }));
+psSign.position.set(0, 8.5, 14.2); scene.add(psSign);
+
+// Automatic Sliding Doors
+const autoDoorL = new THREE.Mesh(new THREE.BoxGeometry(3.8, 4.5, 0.2), matGlass); autoDoorL.position.set(-1.9, 2.25, 14); scene.add(autoDoorL);
+const autoDoorR = new THREE.Mesh(new THREE.BoxGeometry(3.8, 4.5, 0.2), matGlass); autoDoorR.position.set(1.9, 2.25, 14); scene.add(autoDoorR);
+const autoDoorCol = addCollider(0, 14, 7.6, 0.5, autoDoorL);
+
+let policeDoorTriggered = false;
+
+// Plaza Sidewalk around Precinct
+const plazaSW = new THREE.Mesh(new THREE.BoxGeometry(60, 0.2, 50), matDarkConcrete);
+plazaSW.position.set(0, 0.1, 0); scene.add(plazaSW);
+
+// 2. DENSE URBAN STREET NETWORK
+// North District (3-Story Brick Towers & Concrete Blocks)
+let b1 = buildComplexBuilding(-38, 55, 12, 12, 3, 'brick', false, null, { title: "Tower Log", text: "Button 1 sits at the highest point of this northern brick tower." });
+let b2 = buildComplexBuilding(38, 55, 14, 12, 2, 'concrete');
+buildComplexBuilding(-65, 60, 12, 14, 2, 'sandstone');
+buildComplexBuilding(65, 60, 12, 14, 1, 'brick');
+
+// East District (Locked Precinct House & Alleys)
+let bLockedBtn = buildComplexBuilding(50, -10, 12, 14, 2, 'brick', true, 'brass_key');
+
+// South District (Ragebait House & Dead Ends)
+let bRage = buildComplexBuilding(-45, -60, 12, 12, 1, 'concrete', true, 'brass_key', { title: "Station Memo", text: "Zero buttons inside this southern unit. Complete decoy." });
+buildComplexBuilding(45, -65, 14, 12, 2, 'sandstone');
+
+// West District (Alley Labyrinth)
+buildComplexBuilding(-55, 10, 12, 12, 2, 'concrete');
+buildComplexBuilding(-75, -25, 10, 10, 1, 'brick');
+
+// 3. ENLARGED CAMPSITE (TENT)
+function buildGiantTent(x, z) {
+    const tentMat = new THREE.MeshLambertMaterial({ color: 0x542313, side: THREE.DoubleSide });
+    const tent = new THREE.Mesh(new THREE.ConeGeometry(6, 5, 4), tentMat);
+    tent.position.set(x, 2.5, z); scene.add(tent); addCollider(x, z, 6, 6);
+
+    // Campfire
+    const fire = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1, 0.4), new THREE.MeshBasicMaterial({ color: 0xff4400 }));
+    fire.position.set(x + 5, 0.2, z + 5); scene.add(fire);
+
+    // Key Item inside campsite crate
+    const keyMesh = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.08, 8, 16), new THREE.MeshBasicMaterial({ color: 0xffd700 }));
+    keyMesh.position.set(x + 2.5, 0.6, z + 2.5); keyMesh.rotation.x = Math.PI / 2; scene.add(keyMesh);
+    keyMesh.userData = { type: 'key', keyId: 'brass_key' };
+    interactables.push(keyMesh);
 }
+buildGiantTent(-25, -25);
 
-// --- CITY MAP GENERATION ---
-
-// 1. CITY CENTER PLAZA
-const centerObelisk = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 1.5, 12, 4), matDarkSandstone);
-centerObelisk.position.set(0, 6, 0); scene.add(centerObelisk); addCollider(0, 0, 3, 3);
-createSidewalk(0, 0, 35, 35);
-
-// 2. DENSE BUILDINGS GRID
-// North-West District
-let b1 = buildBuilding(-45, 50, 10, 10, 3, false, null, { title: "Tower Note", text: "I climbed to the top... the view of this organism is horrific. A button rests on the top floor." }, 'rubble');
-let b2 = buildBuilding(-20, 60, 12, 10, 2, false, null, null, 'table');
-buildBuilding(-55, 20, 12, 12, 1, false, null, null, null);
-
-// North-East District (LOCKED HOUSE WITH BUTTON)
-let bLockedBtn = buildBuilding(45, 55, 12, 12, 2, true, 'brass_key', null, 'table');
-
-// South-West District (LOCKED DECOY HOUSE - RAGEBAIT)
-let bLockedRage = buildBuilding(-50, -50, 10, 10, 1, true, 'brass_key', { title: "Fool's Note", text: "You unlocked this door hoping for salvation? There is no button here. Only regret." }, null);
-
-// South-East District
-buildBuilding(40, -40, 14, 10, 2, false, null, null, 'rubble');
-buildBuilding(55, -80, 10, 10, 1, false, null, null, 'table');
-
-// Tents
-buildTent(-25, -20, true); // Contains Brass Key
-buildTent(30, 25, false);
-buildTent(-10, -70, false);
-
-// Acid Pools
-function createAcidPool(x, z, r) {
-    let pool = new THREE.Mesh(new THREE.CircleGeometry(r, 16), new THREE.MeshBasicMaterial({ color: 0x33ff33, transparent: true, opacity: 0.7 }));
-    pool.rotation.x = -Math.PI / 2; pool.position.set(x, 0.02, z); scene.add(pool);
-    acidPools.push({ x, z, radius: r });
-}
-createAcidPool(-15, 20, 3.5);
-createAcidPool(25, -60, 4.0);
-
-// Calcified Gate
-const gateGroup = new THREE.Group(); gateGroup.position.set(0, 0, -135);
-for(let i = -5; i <= 5; i++) {
-    let rib = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 10), matBone);
-    rib.position.set(i * 1.2, 5, 0); gateGroup.add(rib);
-}
-scene.add(gateGroup); addCollider(0, -135, 14, 2);
-
-// --- 4 HIDDEN BUTTONS ---
-function createButton(x, y, z, id) {
-    let base = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 1.2), matSandstone); base.position.set(x, y, z); scene.add(base);
-    let btn = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.3, 0.6), new THREE.MeshLambertMaterial({ color: 0xff2200 }));
+// 4. BUTTON PLACEMENT
+function createSandstoneButton(x, y, z, id) {
+    let base = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.8, 1.4), matSandstone); base.position.set(x, y, z); scene.add(base);
+    let btn = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.4, 0.7), new THREE.MeshLambertMaterial({ color: 0xff2200 }));
     btn.position.set(x, y + 0.4, z); scene.add(btn);
     btn.userData = { type: 'button', id: id, pressed: false };
     interactables.push(btn); buttons.push(btn);
 }
 
-createButton(-45, b1.topY + 0.4, 50, 1); // Button 1: NW 3-Story Tower Top Floor
-createButton(0, 0.4, -5, 2);              // Button 2: City Center Plaza (DANGEROUS)
-createButton(45, 0.4, 55, 3);             // Button 3: Inside Locked House (Needs Key)
-createButton(-75, 0.4, -20, 4);           // Button 4: Hidden in Outer Alleyway
+createSandstoneButton(-38, b1.topY + 0.4, 55, 1);  // Button 1: NW 3-Story Brick Top
+createSandstoneButton(0, 0.4, -5, 2);               // Button 2: Inside Police Station Backroom
+createSandstoneButton(50, 0.4, -10, 3);              // Button 3: Inside Locked Brick House
+createSandstoneButton(-80, 0.4, -30, 4);             // Button 4: Far Western Alleyway Dead End
 
-// --- STALKER AI (More in City Center) ---
-function createStalker(x, z) {
+// 5. CALCIFIED EXIT GATE
+const gateGroup = new THREE.Group(); gateGroup.position.set(0, 0, -135);
+for(let i = -6; i <= 6; i++) {
+    let rib = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 12), new THREE.MeshLambertMaterial({ color: 0xded2bd }));
+    rib.position.set(i * 1.3, 6, 0); gateGroup.add(rib);
+}
+scene.add(gateGroup); addCollider(0, -135, 16, 2);
+
+// --- DRIVABLE POLICE CAR ENGINE ---
+const carGroup = new THREE.Group();
+const carBody = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.2, 4.8), new THREE.MeshLambertMaterial({ color: 0x112233 })); carBody.position.y = 0.8; carGroup.add(carBody);
+const carCabin = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.9, 2.2), matGlass); carCabin.position.set(0, 1.6, -0.2); carGroup.add(carCabin);
+const sirenLight = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.25, 0.3), new THREE.MeshBasicMaterial({ color: 0xff0000 })); sirenLight.position.set(0, 2.15, -0.2); carGroup.add(sirenLight);
+
+carGroup.position.set(-60, 0, -50);
+scene.add(carGroup);
+
+carGroup.userData = { type: 'car' };
+interactables.push(carBody);
+
+// --- INSECTOID UNIFORMED STALKERS ---
+function createInsectoidStalker(x, z, isPrecinctGuard = false) {
     const grp = new THREE.Group();
-    const bodyMat = new THREE.MeshLambertMaterial({ color: 0x331d0f });
-    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.4, 2.8), bodyMat); torso.position.y = 1.4; grp.add(torso);
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.5, 10, 10), bodyMat); head.position.y = 3.0; grp.add(head);
+
+    // Upright Insect Body
+    const abdomen = new THREE.Mesh(new THREE.ConeGeometry(0.5, 2.2, 6), matInsect); abdomen.rotation.x = Math.PI; abdomen.position.y = 1.6; grp.add(abdomen);
+    const thorax = new THREE.Mesh(new THREE.SphereGeometry(0.6, 8, 8), matInsect); thorax.position.y = 2.8; grp.add(thorax);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 8), new THREE.MeshLambertMaterial({ color: 0xcc1100 })); head.position.y = 3.5; grp.add(head);
+
+    // Police Vest Uniform
+    const vest = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.2, 0.9), matUniform); vest.position.y = 2.7; grp.add(vest);
+
+    // Multi-legs
+    for(let i=0; i<4; i++) {
+        let leg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.8), matInsect);
+        leg.position.set(i%2===0? 0.6 : -0.6, 0.9, (i>1? 0.3 : -0.3));
+        leg.rotation.z = i%2===0? -0.3 : 0.3;
+        grp.add(leg);
+    }
+
     grp.position.set(x, 0, z); scene.add(grp);
 
     stalkers.push({
-        mesh: grp, speed: 3.5,
-        patrolTarget: new THREE.Vector3(x + (Math.random()-0.5)*25, 0, z + (Math.random()-0.5)*25),
-        groanTimer: Math.random() * 5
+        mesh: grp, speed: 4.2, isGuard: isPrecinctGuard,
+        patrolAngle: Math.random() * Math.PI * 2,
+        homePos: new THREE.Vector3(x, 0, z)
     });
 }
 
-createStalker(5, 5);    // City Center Guard 1
-createStalker(-5, -5);  // City Center Guard 2
-createStalker(-40, 30); // NW District
-createStalker(40, -30); // SE District
+// 2 Outer Perimeter Guards + 1 Inside Precinct Guard
+createInsectoidStalker(-22, 0, false);
+createInsectoidStalker(22, 0, false);
+createInsectoidStalker(0, -3, true); // Precinct interior
 
-// --- INTERACTION HANDLING ---
+// --- INTERACTION & HINT SYSTEM ---
 let activeInteractable = null;
+
+function showHint() {
+    let unpressed = buttons.filter(b => !b.userData.pressed);
+    if (unpressed.length > 0) {
+        let b = unpressed[0];
+        let pos = b.position;
+        let cardDir = pos.z < camera.position.z ? "NORTH" : "SOUTH";
+        cardDir += pos.x < camera.position.x ? "-WEST" : "-EAST";
+        flashText(`HINT: Unpressed Button detected towards the ${cardDir}!`);
+    } else {
+        flashText("HINT: All 4 Buttons activated! Escape through the Northern Gate!");
+    }
+}
+
+function handleEPress() {
+    if (activeInteractable && activeInteractable.parent === carGroup || inCar) {
+        inCar = !inCar;
+        if (inCar) {
+            flashText("Entered Police Cruiser. Drive with [W/S/A/D].");
+            ui.windshield.style.display = 'block';
+            ui.carHud.style.display = 'block';
+            mirrorMesh.visible = true;
+        } else {
+            flashText("Exited Vehicle.");
+            ui.windshield.style.display = 'none';
+            ui.carHud.style.display = 'none';
+            mirrorMesh.visible = false;
+            camera.position.set(carGroup.position.x + 2, 1.7, carGroup.position.z);
+        }
+    }
+}
 
 function handleZPress() {
     if (isReadingDiary) {
@@ -404,10 +529,8 @@ function handleZPress() {
         let type = activeInteractable.userData.type;
 
         if (type === 'key') {
-            hasBrassKey = true;
-            ui.keyStatus.innerText = "Brass Key";
-            flashText("Picked up the Brass Key!");
-            scene.remove(activeInteractable);
+            hasBrassKey = true; ui.keyStatus.innerText = "Brass Key";
+            flashText("Acquired Brass Key!"); scene.remove(activeInteractable);
             interactables.splice(interactables.indexOf(activeInteractable), 1);
         }
         else if (type === 'door') {
@@ -415,34 +538,20 @@ function handleZPress() {
             if (data.moving) return;
 
             if (data.locked) {
-                if (hasBrassKey) {
-                    data.locked = false;
-                    flashText("Unlocked the door with the Brass Key!");
-                } else {
-                    flashText("The door is locked tight. Needs a key.");
-                    return;
-                }
+                if (hasBrassKey) { data.locked = false; flashText("Unlocked Door!"); }
+                else { flashText("Door requires Brass Key."); return; }
             }
 
             data.moving = true;
             let targetAngle = data.open ? 0 : Math.PI / 2;
             let step = data.open ? -0.05 : 0.05;
-
-            // Remove collision while opening
             removeCollider(data.collider.ref);
 
             let anim = setInterval(() => {
                 data.pivot.rotation.y += step;
                 if ((step > 0 && data.pivot.rotation.y >= targetAngle) || (step < 0 && data.pivot.rotation.y <= targetAngle)) {
-                    data.pivot.rotation.y = targetAngle;
-                    data.open = !data.open;
-                    data.moving = false;
-                    clearInterval(anim);
-
-                    // Re-add collider if door is closed again
-                    if (!data.open) {
-                        data.collider = addCollider(data.pos.x, data.pos.z, 3, 0.5, activeInteractable);
-                    }
+                    data.pivot.rotation.y = targetAngle; data.open = !data.open; data.moving = false; clearInterval(anim);
+                    if (!data.open) data.collider = addCollider(data.pos.x, data.pos.z, 3.2, 0.6, activeInteractable);
                 }
             }, 16);
         }
@@ -453,16 +562,14 @@ function handleZPress() {
         }
         else if (type === 'button' && !activeInteractable.userData.pressed) {
             activeInteractable.userData.pressed = true;
-            activeInteractable.position.y -= 0.15;
+            activeInteractable.position.y -= 0.18;
             activeInteractable.material.color.setHex(0x00ff00);
-            buttonsPressed++;
-            ui.btnCount.innerText = buttonsPressed;
-            playHeartbeat();
-            flashText(`Gate Mechanism Activated (${buttonsPressed}/4)`);
-            gateGroup.position.y += 2.0;
+            buttonsPressed++; ui.btnCount.innerText = buttonsPressed;
+            playHeartbeat(); flashText(`Button Activated (${buttonsPressed}/4)`);
+            gateGroup.position.y += 2.2;
 
             if (buttonsPressed === 4) {
-                flashText("THE GATE IS FULLY OPENED! ESCAPE NORTH!");
+                flashText("NORTHERN BONE GATE RAISED! ESCAPE!");
                 solidWalls.splice(solidWalls.findIndex(w => w.minZ === -135), 1);
             }
         }
@@ -471,17 +578,13 @@ function handleZPress() {
 
 function flashText(msg) {
     ui.flash.innerText = msg; ui.flash.style.opacity = 1;
-    setTimeout(() => { ui.flash.style.opacity = 0; }, 3000);
+    setTimeout(() => { ui.flash.style.opacity = 0; }, 3200);
 }
 
-// Collision Checker
-function checkCollisions(newPos) {
-    let r = 0.5;
+function checkCollisions(newPos, radius = 0.6) {
     for(let w of solidWalls) {
-        if (newPos.x + r > w.minX && newPos.x - r < w.maxX &&
-            newPos.z + r > w.minZ && newPos.z - r < w.maxZ) {
-            return true;
-        }
+        if (newPos.x + radius > w.minX && newPos.x - radius < w.maxX &&
+            newPos.z + radius > w.minZ && newPos.z - radius < w.maxZ) return true;
     }
     return false;
 }
@@ -497,19 +600,66 @@ function animate() {
 
     if (isGameOver || isVictorious) return;
 
-    // Acid slowdown
-    currentSpeed = baseSpeed;
-    for (let pool of acidPools) {
-        if (Math.hypot(camera.position.x - pool.x, camera.position.z - pool.z) < pool.radius) {
-            currentSpeed = baseSpeed * 0.35; break;
+    // AUTOMATIC POLICE DOORS & ALARM
+    let distToPrecinctDoor = Math.hypot(camera.position.x - 0, camera.position.z - 14);
+    if (distToPrecinctDoor < 6) {
+        autoDoorL.position.x = THREE.MathUtils.lerp(autoDoorL.position.x, -4.5, 0.08);
+        autoDoorR.position.x = THREE.MathUtils.lerp(autoDoorR.position.x, 4.5, 0.08);
+        removeCollider(autoDoorCol.ref);
+
+        if (!policeDoorTriggered) {
+            policeDoorTriggered = true;
+            triggerDoorAlarm();
+            flashText("PRECINCT SENSORS TRIGGERED! GUARD ALERTED!");
         }
+    } else {
+        autoDoorL.position.x = THREE.MathUtils.lerp(autoDoorL.position.x, -1.9, 0.08);
+        autoDoorR.position.x = THREE.MathUtils.lerp(autoDoorR.position.x, 1.9, 0.08);
     }
 
-    // Player Movement (W FORWARD, S BACKWARD FIXED)
-    if (document.pointerLockElement === document.body && !isReadingDiary) {
+    // VEHICLE PHYSICS & DRIVING
+    if (inCar) {
+        if (carFuel > 0 && (keys.w || keys.s)) {
+            carFuel = Math.max(0, carFuel - dt * 2.5);
+            let accel = keys.w ? 18.0 : -10.0;
+            carSpeed = THREE.MathUtils.lerp(carSpeed, accel, dt * 2.0);
+        } else {
+            carSpeed = THREE.MathUtils.lerp(carSpeed, 0, dt * 3.0);
+        }
+
+        if (Math.abs(carSpeed) > 0.5) {
+            if (keys.a) carAngle += dt * 1.8;
+            if (keys.d) carAngle -= dt * 1.8;
+        }
+
+        carGroup.rotation.y = carAngle;
+        let moveDist = carSpeed * dt;
+        let nextCarX = carGroup.position.x - Math.sin(carAngle) * moveDist;
+        let nextCarZ = carGroup.position.z - Math.cos(carAngle) * moveDist;
+
+        if (!checkCollisions(new THREE.Vector3(nextCarX, 0.8, nextCarZ), 1.8)) {
+            carGroup.position.set(nextCarX, 0.8, nextCarZ);
+        } else { carSpeed = -carSpeed * 0.4; } // Vehicle Bouncing
+
+        // Attach Camera & Rearview Mirror inside Car Cockpit
+        camera.position.set(carGroup.position.x, 1.8, carGroup.position.z);
+        camera.rotation.set(0, carAngle + Math.PI, 0);
+
+        mirrorCamera.position.copy(camera.position);
+        mirrorCamera.rotation.set(0, carAngle, 0); // Reverse View
+        renderer.setRenderTarget(mirrorRenderTarget);
+        renderer.render(scene, mirrorCamera);
+        renderer.setRenderTarget(null);
+
+        ui.fuelCount.innerText = Math.floor(carFuel);
+        ui.dashFuel.innerText = Math.floor(carFuel);
+        ui.carSpeedHud.innerText = Math.abs(Math.floor(carSpeed * 3));
+    }
+    // ON-FOOT MOVEMENT
+    else if (document.pointerLockElement === document.body && !isReadingDiary) {
         let dirX = Number(keys.d) - Number(keys.a);
-        let dirZ = Number(keys.w) - Number(keys.s); // Corrected orientation
-        
+        let dirZ = Number(keys.w) - Number(keys.s);
+
         const camDir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion); camDir.y = 0; camDir.normalize();
         const camRight = new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion); camRight.y = 0; camRight.normalize();
 
@@ -518,104 +668,77 @@ function animate() {
         moveVec.addScaledVector(camRight, dirX);
         moveVec.normalize();
 
-        let nextX = camera.position.x + moveVec.x * currentSpeed * dt;
-        if(!checkCollisions(new THREE.Vector3(nextX, camera.position.y, camera.position.z))) {
-            camera.position.x = nextX;
-        }
+        let speed = 7.5;
+        let nextX = camera.position.x + moveVec.x * speed * dt;
+        if (!checkCollisions(new THREE.Vector3(nextX, camera.position.y, camera.position.z))) camera.position.x = nextX;
 
-        let nextZ = camera.position.z + moveVec.z * currentSpeed * dt;
-        if(!checkCollisions(new THREE.Vector3(camera.position.x, camera.position.y, nextZ))) {
-            camera.position.z = nextZ;
-        }
+        let nextZ = camera.position.z + moveVec.z * speed * dt;
+        if (!checkCollisions(new THREE.Vector3(camera.position.x, camera.position.y, nextZ))) camera.position.z = nextZ;
     }
 
-    // Stalkers Logic
+    // INSECTOID STALKER AI
     for (let s of stalkers) {
-        s.groanTimer -= dt;
-        if (s.groanTimer <= 0) {
-            s.groanTimer = 5 + Math.random() * 5;
-            if (camera.position.distanceTo(s.mesh.position) < 25) playStalkerGroan();
-        }
+        let target = camera.position;
+        let dist = s.mesh.position.distanceTo(target);
 
-        let dist = s.mesh.position.distanceTo(camera.position);
-
-        // Blind Stalkers: Chase if extremely close (< 3.8 units)
-        if (dist < 3.8) {
-            let chaseDir = new THREE.Vector3().subVectors(camera.position, s.mesh.position).normalize();
+        // Precinct Guard responds instantly if alarm rang
+        if (s.isGuard && policeDoorTriggered && dist < 35) {
+            let chaseDir = new THREE.Vector3().subVectors(target, s.mesh.position).normalize();
             s.mesh.position.addScaledVector(chaseDir, s.speed * dt);
-            s.mesh.lookAt(camera.position.x, s.mesh.position.y, camera.position.z);
+            s.mesh.lookAt(target.x, s.mesh.position.y, target.z);
+        }
+        // Outer Guards Patrol Perimeter
+        else if (!s.isGuard) {
+            s.patrolAngle += dt * 0.4;
+            let px = Math.cos(s.patrolAngle) * 26;
+            let pz = Math.sin(s.patrolAngle) * 26;
+            let patTarget = new THREE.Vector3(px, 0, pz);
+            let pDir = new THREE.Vector3().subVectors(patTarget, s.mesh.position).normalize();
+            s.mesh.position.addScaledVector(pDir, s.speed * 0.6 * dt);
+            s.mesh.lookAt(patTarget.x, s.mesh.position.y, patTarget.z);
+        }
 
-            if (dist < 1.2) {
-                isGameOver = true; document.exitPointerLock();
-                ui.screenTitle.innerText = "DIGESTED.\n\nAN IMMUNE CELL CONSUMED YOU.";
-                ui.actionBtn.innerText = "Try Again";
-                ui.actionBtn.onclick = () => window.location.reload();
-                ui.screenOverlay.style.display = 'flex';
-            }
-        } else {
-            // Patrol Target
-            let patrolDir = new THREE.Vector3().subVectors(s.patrolTarget, s.mesh.position); patrolDir.y = 0;
-            if (patrolDir.length() < 1.5) {
-                s.patrolTarget.set(s.mesh.position.x + (Math.random()-0.5)*30, 0, s.mesh.position.z + (Math.random()-0.5)*30);
-            } else {
-                patrolDir.normalize();
-                s.mesh.position.addScaledVector(patrolDir, (s.speed * 0.4) * dt);
-                s.mesh.lookAt(s.patrolTarget.x, s.mesh.position.y, s.patrolTarget.z);
-            }
+        // Caught condition
+        if (dist < 1.4 && !inCar) {
+            isGameOver = true; document.exitPointerLock();
+            ui.screenTitle.innerText = "CAPTURED BY THE PATROL INSECTS.\n\nYOU HAVE BEEN DETAINED.";
+            ui.actionBtn.innerText = "Try Again";
+            ui.actionBtn.onclick = () => window.location.reload();
+            ui.screenOverlay.style.display = 'flex';
         }
     }
 
-    // Guidance Arrow System
-    hintTimer += dt;
-    let currentTarget = null;
-    if (buttonsPressed < 4) {
-        let unpressed = buttons.filter(b => !b.userData.pressed);
-        if (unpressed.length > 0) currentTarget = unpressed[0];
-    } else {
-        currentTarget = gateGroup;
-    }
-
-    if (hintTimer > 15 && currentTarget) {
-        ui.hint.innerText = buttonsPressed < 4 ? "Search inside towers, locked houses, and outer alleys for buttons." : "The Gate is open! Escape to the North!";
-        ui.hint.style.opacity = 1;
-    }
-
-    if (hintTimer > 30 && currentTarget) {
-        let tPos = new THREE.Vector3(); currentTarget.getWorldPosition(tPos);
-        guideArrow.position.set(tPos.x, tPos.y + 2.5 + Math.sin(now * 0.005) * 0.3, tPos.z);
-        guideArrow.visible = true;
-    } else { guideArrow.visible = false; }
-
-    // Exit Detection
+    // EXIT DETECTION
     if (buttonsPressed === 4 && camera.position.z < -138) {
         isVictorious = true; document.exitPointerLock();
-        ui.screenTitle.innerText = "LEVEL 2 CLEARED\n\nYOU ESCAPED SMILER'S GULLET!";
+        ui.screenTitle.innerText = "LEVEL 2 CLEARED!\n\nYOU ESCAPED THE PRECINCT CITY!";
         ui.actionBtn.innerText = "Proceed to Level 3";
         ui.actionBtn.onclick = () => { window.location.href = '/levelthree.html'; };
         ui.screenOverlay.style.display = 'flex';
     }
 
-    // Raycast Interaction Prompts
+    // RAYCAST INTERACTION PROMPTS
     activeInteractable = null;
     ui.prompt.style.display = 'none';
 
-    if (document.pointerLockElement === document.body) {
+    if (document.pointerLockElement === document.body && !inCar) {
         const raycaster = new THREE.Raycaster();
         raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
         const intersects = raycaster.intersectObjects(interactables);
 
         if (intersects.length > 0 && intersects[0].distance < 4.5) {
             let obj = intersects[0].object;
-            let type = obj.userData.type;
+            let type = obj.userData.type || (obj.parent ? obj.parent.userData.type : null);
             let pText = "";
 
             if (type === 'key') pText = "Z to Pick Up Brass Key";
             else if (type === 'door') {
-                if (obj.userData.locked) pText = hasBrassKey ? "Z to Unlock Door (Brass Key)" : "Door is Locked";
+                if (obj.userData.locked) pText = hasBrassKey ? "Z to Unlock Door (Brass Key)" : "Door Locked (Requires Key)";
                 else pText = obj.userData.open ? "Z to Close Door" : "Z to Open Door";
             }
-            else if (type === 'diary') pText = "Z to Read Journal Entry";
-            else if (type === 'button' && !obj.userData.pressed) pText = "Z to Press Sandstone Button";
+            else if (type === 'diary') pText = "Z to Read Journal Note";
+            else if (type === 'button' && !obj.userData.pressed) pText = "Z to Activate Sandstone Button";
+            else if (type === 'car') pText = "E to Drive Squad Car";
 
             if (pText) {
                 activeInteractable = obj;
