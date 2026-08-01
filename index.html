@@ -108,7 +108,7 @@
 
         #note-view p {
             color: #900;
-            font-size: 45px;
+            font-size: 35px;
             font-weight: bold;
             font-style: italic;
             margin: 0;
@@ -163,42 +163,46 @@
         }
         #input-view button:hover { background: #666; }
 
-      #game-over {
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: black;
-    display: none;
-    flex-direction: column; /* Stacks text and button vertically */
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
+        /* Updated Game Over & Level 2 Button Styling */
+        #game-over {
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: black;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            pointer-events: auto;
+        }
+        #game-over h1 {
+            color: #d00;
+            font-size: 3vw;
+            text-shadow: 0 0 10px #f00;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        #level2-btn {
+            padding: 15px 35px;
+            font-size: 22px;
+            font-family: 'Courier New', Courier, monospace;
+            background: #111;
+            color: #ff0000;
+            border: 2px solid #880000;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+        #level2-btn:hover {
+            background: #880000;
+            color: #fff;
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.9);
+        }
 
-#game-over h1 {
-    color: #d00;
-    font-size: 3vw;
-    text-shadow: 0 0 10px #f00;
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-/* Styled transition button */
-#level2-btn {
-    padding: 15px 30px;
-    font-size: 20px;
-    font-family: 'Courier New', Courier, monospace;
-    background: #111;
-    color: #ff0000;
-    border: 2px solid #880000;
-    cursor: pointer;
-    box-shadow: 0 0 10px rgba(255, 0, 0, 0.4);
-    transition: all 0.3s ease;
-}
-
-#level2-btn:hover {
-    background: #880000;
-    color: #fff;
-    box-shadow: 0 0 20px rgba(255, 0, 0, 0.9);
-}
+        .click-to-start {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            background: #000; color: white; display: flex; align-items: center; justify-content: center;
+            z-index: 200; font-size: 24px; cursor: pointer;
+        }
     </style>
     <!-- Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -212,12 +216,12 @@
 
     <div id="crosshair" class="overlay">+</div>
     <div id="interact-prompt" class="overlay"></div>
-    <div id="flash-text" class="overlay">Look outside.</div>
+    <div id="flash-text" class="overlay">The house is locked.</div>
     <div id="hint-text" class="overlay"></div>
 
     <div id="note-view" class="overlay">
         <div class="paper">
-            <p>They're coming. I need to run.</p>
+            <p id="note-text">They're coming...</p>
         </div>
         <div class="sub">Press Z to put down</div>
     </div>
@@ -234,36 +238,38 @@
     </div>
 
     <div id="game-over" class="overlay">
-    <h1>GAME OVER.<br><br>YOU CANT ESCAPE HIM.<br><br>IT IS INEVITABLE.</h1>
-    <button id="level2-btn">AWAKEN IN THE DESERT</button>
+        <h1>GAME OVER.<br><br>YOU CANT ESCAPE HIM.<br><br>IT IS INEVITABLE.</h1>
+        <button id="level2-btn">Awake in the Desert</button>
     </div>
-<script>
-document.getElementById('level2-btn').addEventListener('click', () => {
-    window.location.href = '/leveltwo.html';
-});
-</script>
 
 <script>
-// --- GAME STATE ---
+// --- GAME STATE ENUM ---
 const STATE = {
     WAKING: 0,
-    FREE: 1,
-    INSIDE: 2,
-    NOTE_READ: 3,
-    SEEK_BOX: 4,
-    SMILER_TALK1: 5,
-    SMILER_TALK2: 6,
-    INPUT_Q: 7,
-    WAIT_Q: 8,
-    READ_A: 9,
-    SMILER_WALKS: 10,
-    SMILER_TALK3: 11,
-    CHASE: 12,
-    DEAD: 13
+    FIND_KEY: 1,
+    ENTER_HOUSE: 2,
+    NOTE1_READ: 3,
+    FIND_NOTE2: 4,
+    NOTE2_READ: 5,
+    SEEK_BOX: 6,
+    FIND_CROWBAR: 7,
+    BREAK_BOX: 8,
+    HUNT_SMILER: 9,
+    SMILER_TALK1: 10,
+    SMILER_TALK2: 11,
+    INPUT_Q: 12,
+    WAIT_Q: 13,
+    READ_A: 14,
+    SMILER_WALKS: 15,
+    SMILER_TALK3: 16,
+    CHASE: 17,
+    DEAD: 18
 };
 
 let currentState = STATE.WAKING;
 let timeInState = 0;
+let hasKey = false;
+let hasCrowbar = false;
 
 // --- CONFIG & DOM ---
 const ui = {
@@ -272,15 +278,22 @@ const ui = {
     flash: document.getElementById('flash-text'),
     hint: document.getElementById('hint-text'),
     note: document.getElementById('note-view'),
+    noteTxt: document.getElementById('note-text'),
     dialog: document.getElementById('dialog-box'),
     dialogTxt: document.getElementById('dialog-text'),
     inputView: document.getElementById('input-view'),
     inputField: document.getElementById('q-input'),
     inputBtn: document.getElementById('q-btn'),
     gameOver: document.getElementById('game-over'),
+    lvl2Btn: document.getElementById('level2-btn'),
     lidTop: document.getElementById('lid-top'),
     lidBottom: document.getElementById('lid-bottom')
 };
+
+// Redirect Button Event Listener
+ui.lvl2Btn.addEventListener('click', () => {
+    window.location.href = '/leveltwo.html';
+});
 
 // --- THREE.JS SETUP ---
 const scene = new THREE.Scene();
@@ -303,7 +316,15 @@ const houseLight = new THREE.PointLight(0xffa500, 0.8, 15);
 houseLight.position.set(0, 2, -15);
 scene.add(houseLight);
 
-// --- CUSTOM POINTER LOCK & MOVEMENT ---
+// Floating Arrow Guidance Mesh
+const arrowGeo = new THREE.ConeGeometry(0.4, 1.2, 8);
+arrowGeo.rotateX(Math.PI); // Point down
+const arrowMat = new THREE.MeshBasicMaterial({ color: 0xff3333, wireframe: true });
+const guideArrow = new THREE.Mesh(arrowGeo, arrowMat);
+guideArrow.visible = false;
+scene.add(guideArrow);
+
+// --- CUSTOM CONTROLS & MOVEMENT ---
 let pitch = 0;
 let yaw = 0;
 const PI_2 = Math.PI / 2;
@@ -317,7 +338,6 @@ document.addEventListener('mousemove', (e) => {
     if (document.pointerLockElement === document.body && currentState !== STATE.DEAD) {
         yaw -= e.movementX * 0.002;
         pitch -= e.movementY * 0.002;
-        // Realistic neck limits
         pitch = Math.max(-PI_2 + 0.2, Math.min(PI_2 - 0.2, pitch));
         
         const qx = new THREE.Quaternion();
@@ -346,7 +366,6 @@ document.addEventListener('keyup', (e) => {
     if(e.code === 'KeyZ') keys.z = false;
 });
 
-// Click to lock
 ui.start.addEventListener('click', () => {
     ui.start.style.display = 'none';
     document.body.requestPointerLock();
@@ -362,7 +381,7 @@ document.body.addEventListener('click', () => {
 
 // --- WORLD BUILDING ---
 const interactables = [];
-let solidWalls = []; // FIXED: Changed from 'const' to 'let' to allow reassignment.
+let solidWalls = [];
 
 function addWallCollider(x, z, w, d) {
     solidWalls.push({
@@ -387,9 +406,8 @@ const leavesMat = new THREE.MeshLambertMaterial({ color: 0x0f2a10 });
 for (let i = 0; i < 150; i++) {
     let tx = (Math.random() - 0.5) * 80;
     let tz = (Math.random() - 0.5) * 80;
-    // Don't spawn on path to house or inside house/box area
     if (Math.abs(tx) < 6 && tz > -25 && tz < 5) continue;
-    if (tx > 6 && tx < 15 && tz > -12 && tz < -4) continue; // Box area clear
+    if (tx > 6 && tx < 15 && tz > -12 && tz < -4) continue;
     
     let trunk = new THREE.Mesh(trunkGeo, trunkMat);
     trunk.position.set(tx, 1.5, tz);
@@ -400,28 +418,42 @@ for (let i = 0; i < 150; i++) {
     addWallCollider(tx, tz, 0.8, 0.8);
 }
 
+// Key & Key Post
+const postGeo = new THREE.CylinderGeometry(0.1, 0.1, 1.5);
+const postMesh = new THREE.Mesh(postGeo, trunkMat);
+postMesh.position.set(-18, 0.75, -5);
+scene.add(postMesh);
+
+const keyGeo = new THREE.TorusGeometry(0.15, 0.04, 8, 16);
+const keyMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
+const keyMesh = new THREE.Mesh(keyGeo, keyMat);
+keyMesh.position.set(-18, 1.3, -4.8);
+keyMesh.userData = { type: 'key' };
+scene.add(keyMesh);
+interactables.push(keyMesh);
+
 // House
 const houseMat = new THREE.MeshLambertMaterial({ color: 0x444444 });
-// Back wall
 const hwBack = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), houseMat);
 hwBack.position.set(0, 2, -20);
 scene.add(hwBack); addWallCollider(0, -20, 10, 0.5);
-// Left wall
+
 const hwLeft = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), houseMat);
 hwLeft.position.set(-4.75, 2, -15);
 scene.add(hwLeft); addWallCollider(-4.75, -15, 0.5, 10);
-// Right wall
+
 const hwRight = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), houseMat);
 hwRight.position.set(4.75, 2, -15);
 scene.add(hwRight); addWallCollider(4.75, -15, 0.5, 10);
-// Front walls (with gap)
+
 const hwF1 = new THREE.Mesh(new THREE.BoxGeometry(3.5, 4, 0.5), houseMat);
 hwF1.position.set(-3, 2, -10);
 scene.add(hwF1); addWallCollider(-3, -10, 3.5, 0.5);
+
 const hwF2 = new THREE.Mesh(new THREE.BoxGeometry(3.5, 4, 0.5), houseMat);
 hwF2.position.set(3, 2, -10);
 scene.add(hwF2); addWallCollider(3, -10, 3.5, 0.5);
-// Roof
+
 const roofGeo = new THREE.ConeGeometry(8, 3, 4);
 const roofMat = new THREE.MeshLambertMaterial({ color: 0x221111 });
 const roof = new THREE.Mesh(roofGeo, roofMat);
@@ -429,19 +461,18 @@ roof.position.set(0, 5.5, -15);
 roof.rotation.y = Math.PI/4;
 scene.add(roof);
 
-// Door (Hinged)
+// Door
 const doorPivot = new THREE.Group();
-doorPivot.position.set(-1.25, 0, -10); // Hinge pos
+doorPivot.position.set(-1.25, 0, -10);
 const doorGeo = new THREE.BoxGeometry(2.5, 3.8, 0.2);
 const doorMesh = new THREE.Mesh(doorGeo, new THREE.MeshLambertMaterial({ color: 0x5c4033 }));
-doorMesh.position.set(1.25, 1.9, 0); // Offset from hinge
+doorMesh.position.set(1.25, 1.9, 0);
 doorPivot.add(doorMesh);
 scene.add(doorPivot);
 let doorOpen = false;
 let doorMoving = false;
 doorMesh.userData = { type: 'door' };
 interactables.push(doorMesh);
-// Base door collider (closed)
 let doorColliderIdx = solidWalls.length;
 addWallCollider(0, -10, 2.5, 0.5); 
 
@@ -451,19 +482,36 @@ const bedGeo = new THREE.BoxGeometry(3, 1, 5);
 const bed = new THREE.Mesh(bedGeo, bedMat);
 bed.position.set(-2.5, 0.5, -17);
 scene.add(bed); addWallCollider(-2.5, -17, 3, 5);
+
 const table = new THREE.Mesh(new THREE.BoxGeometry(2, 1.2, 2), new THREE.MeshLambertMaterial({color: 0x553311}));
 table.position.set(2.5, 0.6, -18);
 scene.add(table); addWallCollider(2.5, -18, 2, 2);
 
-// Note
-const noteGeo = new THREE.PlaneGeometry(0.5, 0.7);
+// Notes (Two Halves)
+const noteGeo = new THREE.PlaneGeometry(0.4, 0.5);
 const noteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-const note = new THREE.Mesh(noteGeo, noteMat);
-note.rotation.x = -Math.PI / 2;
-note.position.set(2.5, 1.21, -18);
-scene.add(note);
-note.userData = { type: 'note' };
-interactables.push(note);
+
+const note1 = new THREE.Mesh(noteGeo, noteMat);
+note1.rotation.x = -Math.PI / 2;
+note1.position.set(2.5, 1.21, -18);
+note1.userData = { type: 'note1' };
+scene.add(note1);
+interactables.push(note1);
+
+const note2 = new THREE.Mesh(noteGeo, noteMat);
+note2.rotation.x = -Math.PI / 2;
+note2.position.set(-2.5, 0.05, -18.5); // Hidden under the bed
+note2.userData = { type: 'note2' };
+scene.add(note2);
+
+// Crowbar behind the house
+const crowbarGeo = new THREE.CylinderGeometry(0.03, 0.03, 1.2);
+const crowbarMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8 });
+const crowbarMesh = new THREE.Mesh(crowbarGeo, crowbarMat);
+crowbarMesh.rotation.z = Math.PI / 3;
+crowbarMesh.position.set(0, 0.2, -22);
+crowbarMesh.userData = { type: 'crowbar' };
+scene.add(crowbarMesh);
 
 // Box outside
 const boxGeo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
@@ -489,7 +537,6 @@ function createFaceTexture(scary) {
         ctx.lineWidth = 15; ctx.strokeStyle = '#000';
         ctx.beginPath(); ctx.arc(256, 270, 100, 0.2, Math.PI-0.2, false); ctx.stroke();
     } else {
-        // Scary
         ctx.fillStyle = '#000';
         ctx.beginPath(); ctx.arc(160, 200, 40, 0, Math.PI*2); ctx.fill();
         ctx.beginPath(); ctx.arc(352, 200, 40, 0, Math.PI*2); ctx.fill();
@@ -500,7 +547,6 @@ function createFaceTexture(scary) {
         ctx.lineWidth = 20; ctx.strokeStyle = '#000';
         ctx.beginPath(); ctx.moveTo(100, 350); ctx.lineTo(256, 420); ctx.lineTo(412, 350); ctx.stroke();
         
-        // blood
         ctx.fillStyle = '#500';
         for(let i=0; i<10; i++) {
             ctx.beginPath(); ctx.arc(Math.random()*512, Math.random()*512, Math.random()*20, 0, Math.PI*2); ctx.fill();
@@ -516,7 +562,6 @@ const smilerGeo = new THREE.SphereGeometry(0.7, 32, 32);
 const smilerMat = new THREE.MeshBasicMaterial({ map: texNormal });
 const smiler = new THREE.Mesh(smilerGeo, smilerMat);
 smiler.position.copy(mysteryBox.position);
-smiler.rotation.y = -Math.PI/4; // Look towards player generally
 smiler.visible = false;
 scene.add(smiler);
 smiler.userData = { type: 'smiler' };
@@ -537,13 +582,14 @@ function startWakingSequence() {
             setTimeout(() => {
                 ui.lidTop.style.height = '0%';
                 ui.lidBottom.style.height = '0%';
-                // Rise up
                 let standInterval = setInterval(() => {
                     playerHeight += 0.05;
                     if(playerHeight >= 1.7) {
                         playerHeight = 1.7;
                         clearInterval(standInterval);
-                        currentState = STATE.FREE;
+                        currentState = STATE.FIND_KEY;
+                        timeInState = 0;
+                        flashText("The house is locked.");
                     }
                 }, 30);
             }, 800);
@@ -572,12 +618,20 @@ function hideDialog() {
 function handleZPress() {
     if(currentState === STATE.DEAD) return;
 
-    if(currentState === STATE.NOTE_READ) {
+    if(currentState === STATE.NOTE1_READ) {
+        ui.note.style.display = 'none';
+        currentState = STATE.FIND_NOTE2;
+        timeInState = 0;
+        flashText("Part of the note is torn off...");
+        interactables.push(note2);
+        return;
+    }
+
+    if(currentState === STATE.NOTE2_READ) {
         ui.note.style.display = 'none';
         currentState = STATE.SEEK_BOX;
         timeInState = 0;
-        flashText("Look outside.");
-        // Enable box interaction
+        flashText("Check the wooden box outside.");
         interactables.push(mysteryBox);
         return;
     }
@@ -605,7 +659,6 @@ function handleZPress() {
     
     if(currentState === STATE.SMILER_TALK3) {
         hideDialog();
-        // Morph
         smiler.material.map = texScary;
         smiler.scale.set(1.5, 1.5, 1.5);
         smilerSpeed = 9.0;
@@ -614,23 +667,33 @@ function handleZPress() {
         return;
     }
 
-    // Interaction raycast
+    // Interaction Raycast Triggers
     if(activeInteractable) {
         let type = activeInteractable.userData.type;
-        if(type === 'door' && !doorMoving) {
+
+        if(type === 'key' && currentState === STATE.FIND_KEY) {
+            hasKey = true;
+            scene.remove(keyMesh);
+            interactables.splice(interactables.indexOf(keyMesh), 1);
+            currentState = STATE.ENTER_HOUSE;
+            timeInState = 0;
+            flashText("Got the key. Unlock the door.");
+        }
+        else if(type === 'door' && !doorMoving) {
+            if(!doorOpen && !hasKey) {
+                flashText("It's locked tight.");
+                return;
+            }
             doorMoving = true;
             let target = doorOpen ? 0 : Math.PI/2;
             let step = doorOpen ? -0.05 : 0.05;
             
-            // update collider immediately
             if(!doorOpen) {
-                 // opening: remove collider
-                 solidWalls[doorColliderIdx].minX = 0; 
-                 solidWalls[doorColliderIdx].maxX = 0;
+                solidWalls[doorColliderIdx].minX = 0; 
+                solidWalls[doorColliderIdx].maxX = 0;
             } else {
-                 // closing: restore
-                 solidWalls[doorColliderIdx].minX = 0;
-                 solidWalls[doorColliderIdx].maxX = 2.5;
+                solidWalls[doorColliderIdx].minX = 0;
+                solidWalls[doorColliderIdx].maxX = 2.5;
             }
 
             let anim = setInterval(() => {
@@ -640,21 +703,38 @@ function handleZPress() {
                     doorOpen = !doorOpen;
                     doorMoving = false;
                     clearInterval(anim);
-                    if(currentState === STATE.FREE) {
-                        currentState = STATE.INSIDE;
-                        timeInState = 0;
-                    }
                 }
             }, 16);
         }
-        else if (type === 'note' && (currentState === STATE.INSIDE || currentState === STATE.FREE)) {
+        else if (type === 'note1' && currentState === STATE.ENTER_HOUSE) {
+            ui.noteTxt.innerText = "They're coming...";
             ui.note.style.display = 'flex';
-            currentState = STATE.NOTE_READ;
+            currentState = STATE.NOTE1_READ;
+        }
+        else if (type === 'note2' && currentState === STATE.FIND_NOTE2) {
+            ui.noteTxt.innerText = "...I need to run. Check the box outside.";
+            ui.note.style.display = 'flex';
+            currentState = STATE.NOTE2_READ;
         }
         else if (type === 'box' && currentState === STATE.SEEK_BOX) {
-            // Break box
+            if(!hasCrowbar) {
+                flashText("It's nailed shut! I need a tool.");
+                currentState = STATE.FIND_CROWBAR;
+                timeInState = 0;
+                interactables.push(crowbarMesh);
+            }
+        }
+        else if (type === 'crowbar' && currentState === STATE.FIND_CROWBAR) {
+            hasCrowbar = true;
+            scene.remove(crowbarMesh);
+            interactables.splice(interactables.indexOf(crowbarMesh), 1);
+            currentState = STATE.BREAK_BOX;
+            timeInState = 0;
+            flashText("Got crowbar! Go smash the box.");
+        }
+        else if (type === 'box' && currentState === STATE.BREAK_BOX) {
+            // Smash Box
             mysteryBox.visible = false;
-            // spawn pieces
             for(let i=0; i<5; i++){
                 let p = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,0.5), boxMat);
                 p.position.copy(mysteryBox.position);
@@ -662,17 +742,19 @@ function handleZPress() {
                 scene.add(p);
                 boxPieces.push(p);
             }
-            
-            // Removing the box's collision 
-            // (this caused the crash in the original code because solidWalls was a const)
             solidWalls = solidWalls.filter(w => !(w.minX == 10 - 0.75 && w.maxZ == -8 + 0.75));
-            
-            // remove from interactables
             interactables.splice(interactables.indexOf(mysteryBox), 1);
             
+            // Smiler vanishes into dark forest
+            smiler.position.set(28, 1.2, -35); 
             smiler.visible = true;
             interactables.push(smiler);
             
+            currentState = STATE.HUNT_SMILER;
+            timeInState = 0;
+            flashText("Something darted into the woods!");
+        }
+        else if (type === 'smiler' && currentState === STATE.HUNT_SMILER) {
             currentState = STATE.SMILER_TALK1;
             timeInState = 0;
             showDialog("Hi! I'm smiler! I know a lot.");
@@ -680,7 +762,7 @@ function handleZPress() {
     }
 }
 
-// Groq Proxy Integration
+// Groq API Logic
 ui.inputBtn.addEventListener('click', async () => {
     let q = ui.inputField.value.trim();
     if(!q) q = "What are you?";
@@ -693,14 +775,10 @@ ui.inputBtn.addEventListener('click', async () => {
     try {
         const res = await fetch("/api/groq", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ question: q })
         });
-
         if (!res.ok) throw new Error("API route failed");
-
         const data = await res.json();
         showDialog(data.answer);
     } catch(e) {
@@ -712,6 +790,7 @@ ui.inputBtn.addEventListener('click', async () => {
 ui.inputField.addEventListener('keydown', (e) => {
     if(e.code === 'Enter') ui.inputBtn.click();
 });
+
 // --- MAIN LOOP ---
 const raycaster = new THREE.Raycaster();
 const screenCenter = new THREE.Vector2(0, 0);
@@ -719,7 +798,7 @@ let activeInteractable = null;
 let lastTime = performance.now();
 
 function checkCollisions(newPos) {
-    let r = 0.5; // player radius
+    let r = 0.5;
     for(let w of solidWalls) {
         if (newPos.x + r > w.minX && newPos.x - r < w.maxX &&
             newPos.z + r > w.minZ && newPos.z - r < w.maxZ) {
@@ -729,40 +808,81 @@ function checkCollisions(newPos) {
     return false;
 }
 
+function updateGuidanceAndHints(dt) {
+    if(currentState <= STATE.WAKING || currentState >= STATE.CHASE) {
+        ui.hint.style.opacity = 0;
+        guideArrow.visible = false;
+        return;
+    }
+
+    timeInState += dt;
+    let targetObj = null;
+    let hintMsg = "";
+
+    // Specific Hints and Arrow Targets
+    if (currentState === STATE.FIND_KEY) {
+        hintMsg = "Search the edge of the forest for a key on a wooden post.";
+        targetObj = keyMesh;
+    } else if (currentState === STATE.ENTER_HOUSE) {
+        hintMsg = "Use the key to unlock the house door ahead.";
+        targetObj = doorMesh;
+    } else if (currentState === STATE.FIND_NOTE2) {
+        hintMsg = "Search in the dark corners under the furniture for the rest of the note.";
+        targetObj = note2;
+    } else if (currentState === STATE.SEEK_BOX) {
+        hintMsg = "Go outside and check the wooden box on the side.";
+        targetObj = mysteryBox;
+    } else if (currentState === STATE.FIND_CROWBAR) {
+        hintMsg = "Check behind the house to find a tool to pry open the box.";
+        targetObj = crowbarMesh;
+    } else if (currentState === STATE.BREAK_BOX) {
+        hintMsg = "Break the wooden box using the crowbar.";
+        targetObj = mysteryBox;
+    } else if (currentState === STATE.HUNT_SMILER) {
+        hintMsg = "Locate the glowing yellow face lurking deep in the dark forest.";
+        targetObj = smiler;
+    }
+
+    // Step 1: Text Hint appears after 10s
+    if (timeInState > 10 && hintMsg) {
+        ui.hint.innerText = hintMsg;
+        ui.hint.style.opacity = 1;
+        ui.hint.style.display = 'block';
+    } else {
+        ui.hint.style.opacity = 0;
+    }
+
+    // Step 2: 3D Guidance Arrow appears 15 SECONDS LATER (timeInState > 25s)
+    if (timeInState > 25 && targetObj) {
+        let targetPos = new THREE.Vector3();
+        targetObj.getWorldPosition(targetPos);
+        
+        let dist = camera.position.distanceTo(targetPos);
+        if (dist > 3.5) { // Show arrow until player gets close
+            guideArrow.position.set(targetPos.x, targetPos.y + 2.2 + Math.sin(performance.now() * 0.005) * 0.2, targetPos.z);
+            guideArrow.visible = true;
+        } else {
+            guideArrow.visible = false;
+        }
+    } else {
+        guideArrow.visible = false;
+    }
+}
+
 function animate() {
     requestAnimationFrame(animate);
     const now = performance.now();
     const dt = (now - lastTime) / 1000;
     lastTime = now;
 
-    // Hints system
-    if(currentState > STATE.WAKING && currentState < STATE.CHASE) {
-        timeInState += dt;
-        if(timeInState > 15 && ui.hint.style.opacity == 0) {
-            let msg = "";
-            if(currentState === STATE.FREE) msg = "Go to the house ahead.";
-            else if(currentState === STATE.INSIDE) msg = "Look around inside for a note.";
-            else if(currentState === STATE.SEEK_BOX) msg = "Go outside and find the box.";
-            
-            if(msg) {
-                ui.hint.innerText = msg;
-                ui.hint.style.opacity = 1;
-                ui.hint.style.display = 'block';
-            }
-        } else if (timeInState < 15 && ui.hint.style.opacity == 1) {
-            ui.hint.style.opacity = 0;
-        }
-    } else {
-        ui.hint.style.opacity = 0;
-    }
+    updateGuidanceAndHints(dt);
 
-    // Movement
+    // Player Movement
     if (document.pointerLockElement === document.body && currentState !== STATE.DEAD) {
         direction.z = Number(keys.w) - Number(keys.s);
         direction.x = Number(keys.d) - Number(keys.a);
         direction.normalize();
 
-        // Calculate view-aligned movement
         const camDir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
         camDir.y = 0; camDir.normalize();
         const camRight = new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);
@@ -773,7 +893,6 @@ function animate() {
         moveVec.addScaledVector(camRight, direction.x);
         
         let targetSpeed = (keys.w || keys.a || keys.s || keys.d) ? speed : 0;
-        
         let oldX = camera.position.x;
         let oldZ = camera.position.z;
         
@@ -787,7 +906,6 @@ function animate() {
             camera.position.z = nextZ;
         }
         
-        // Bobbing
         if (targetSpeed > 0) {
             camera.position.y = playerHeight + Math.sin(now * 0.01) * 0.05;
         } else {
@@ -798,20 +916,26 @@ function animate() {
     // Interaction Raycast
     activeInteractable = null;
     ui.prompt.style.display = 'none';
-    if(currentState !== STATE.DEAD && currentState !== STATE.INPUT_Q && currentState !== STATE.NOTE_READ) {
+    if(currentState !== STATE.DEAD && currentState !== STATE.INPUT_Q && currentState !== STATE.NOTE1_READ && currentState !== STATE.NOTE2_READ) {
         raycaster.setFromCamera(screenCenter, camera);
         const intersects = raycaster.intersectObjects(interactables);
         if (intersects.length > 0 && intersects[0].distance < 4) {
             let obj = intersects[0].object;
             let type = obj.userData.type;
             
-            // Logic filters
             let show = false;
             let pText = "";
             
-            if(type === 'door') { show = true; pText = doorOpen ? "Z to close" : "Z to open"; }
-            else if(type === 'note' && (currentState === STATE.INSIDE || currentState === STATE.FREE)) { show = true; pText = "Z to read"; }
-            else if(type === 'box' && currentState === STATE.SEEK_BOX) { show = true; pText = "Z to break"; }
+            if(type === 'key' && currentState === STATE.FIND_KEY) { show = true; pText = "Z to pick up key"; }
+            else if(type === 'door') { show = true; pText = doorOpen ? "Z to close" : "Z to open"; }
+            else if(type === 'note1' && currentState === STATE.ENTER_HOUSE) { show = true; pText = "Z to read note"; }
+            else if(type === 'note2' && currentState === STATE.FIND_NOTE2) { show = true; pText = "Z to read torn note"; }
+            else if(type === 'box' && (currentState === STATE.SEEK_BOX || currentState === STATE.BREAK_BOX)) { 
+                show = true; 
+                pText = hasCrowbar ? "Z to smash box" : "Z to inspect box"; 
+            }
+            else if(type === 'crowbar' && currentState === STATE.FIND_CROWBAR) { show = true; pText = "Z to take crowbar"; }
+            else if(type === 'smiler' && currentState === STATE.HUNT_SMILER) { show = true; pText = "Z to talk"; }
             
             if(show) {
                 activeInteractable = obj;
@@ -825,7 +949,7 @@ function animate() {
     for(let i=boxPieces.length-1; i>=0; i--){
         let p = boxPieces[i];
         p.position.addScaledVector(p.userData.vel, dt);
-        p.userData.vel.y -= 9.8 * dt; // gravity
+        p.userData.vel.y -= 9.8 * dt;
         p.rotation.x += dt; p.rotation.y += dt;
         if(p.position.y < 0) {
             scene.remove(p);
@@ -833,9 +957,8 @@ function animate() {
         }
     }
 
-    // Smiler Logic
+    // Smiler AI Logic
     if(currentState === STATE.SMILER_WALKS) {
-        // Move towards bed
         let targetPos = new THREE.Vector3(-2.5, 1.5, -17);
         let dist = smiler.position.distanceTo(targetPos);
         if(dist > 0.1) {
@@ -844,7 +967,7 @@ function animate() {
         } else {
             smiler.position.copy(targetPos);
             currentState = STATE.SMILER_TALK3;
-            showDialog("Oh. You've read this note. Well.. guess I have to chase you!");
+            showDialog("Oh. You've read my whole note. Well.. guess I have to chase you!");
         }
     }
     
@@ -856,7 +979,7 @@ function animate() {
         
         let distToPlayer = smiler.position.distanceTo(camera.position);
         if(distToPlayer < 1.5) {
-            // CAUGHT
+            // CAUGHT - GAME OVER & SHOW LEVEL 2 BUTTON
             currentState = STATE.DEAD;
             ui.gameOver.style.display = 'flex';
             document.exitPointerLock();
