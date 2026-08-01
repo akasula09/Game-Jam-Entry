@@ -3,46 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Level 2: Desert Urban Complex</title>
+    <title>Level 2: Belly of the Smiley Face Monster</title>
     <style>
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background-color: #2b1d0c;
+            overflow: hidden; background-color: #1c0505;
             font-family: 'Courier New', Courier, monospace; user-select: none;
         }
         #game-canvas { display: block; width: 100%; height: 100%; }
         .overlay { position: absolute; pointer-events: none; display: none; z-index: 50; }
         #crosshair { top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ffcc66; font-size: 24px; display: block; }
-        #interact-prompt { top: 58%; left: 50%; transform: translateX(-50%); color: #fff8e7; font-size: 18px; text-shadow: 2px 2px 0px #000; background: rgba(40, 20, 5, 0.85); padding: 6px 14px; border: 1px solid #d49a4b; border-radius: 4px; }
-        #flash-text { top: 15%; left: 50%; transform: translateX(-50%); color: #ffaa33; font-size: 26px; text-shadow: 3px 3px 0px #000; opacity: 0; transition: opacity 0.5s; text-align: center; display: block; }
-        #hint-text { bottom: 8%; left: 50%; transform: translateX(-50%); color: #ffdca8; font-size: 15px; background: rgba(30, 15, 5, 0.9); border: 1px solid #aa7733; padding: 8px 18px; border-radius: 4px; opacity: 0; transition: opacity 0.5s; display: block; text-align: center; }
+        #interact-prompt { top: 58%; left: 50%; transform: translateX(-50%); color: #fff8e7; font-size: 18px; text-shadow: 2px 2px 0px #000; background: rgba(50, 10, 10, 0.9); padding: 6px 14px; border: 1px solid #ff4444; border-radius: 4px; }
+        #flash-text { top: 15%; left: 50%; transform: translateX(-50%); color: #ff3333; font-size: 24px; text-shadow: 3px 3px 0px #000; opacity: 0; transition: opacity 0.5s; text-align: center; display: block; }
+        #hint-text { bottom: 8%; left: 50%; transform: translateX(-50%); color: #ffdca8; font-size: 15px; background: rgba(30, 5, 5, 0.9); border: 1px solid #aa3333; padding: 8px 18px; border-radius: 4px; opacity: 0; transition: opacity 0.5s; display: block; text-align: center; }
         
-        #status-hud { top: 20px; left: 20px; color: #ffcc66; font-size: 16px; display: block; text-shadow: 1px 1px 2px #000; }
-        #inventory-hud { top: 45px; left: 20px; color: #ffe6b3; font-size: 15px; display: block; text-shadow: 1px 1px 2px #000; }
-        #car-hud { top: 70px; left: 20px; color: #66ff88; font-size: 15px; display: none; text-shadow: 1px 1px 2px #000; }
+        #status-hud { top: 20px; left: 20px; color: #ffaa66; font-size: 16px; display: block; text-shadow: 1px 1px 2px #000; }
+        #health-hud { top: 45px; left: 20px; color: #66ff66; font-size: 16px; display: block; text-shadow: 1px 1px 2px #000; }
+        #inventory-hud { top: 70px; left: 20px; color: #ffe6b3; font-size: 15px; display: block; text-shadow: 1px 1px 2px #000; }
 
-        #windshield-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            border: 35px solid #1f1a14; border-bottom: 90px solid #120e0a;
-            box-sizing: border-box; pointer-events: none; display: none; z-index: 40;
-        }
-        #dash-reflection {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 90px;
-            background: linear-gradient(to top, #0f0b08, #261d15);
-            border-top: 3px solid #543c28; display: flex; justify-content: space-around; align-items: center; color: #ffaa44; font-family: monospace; padding: 0 50px; box-sizing: border-box;
-        }
-
-        #diary-view { top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 8, 3, 0.94); display: none; align-items: center; justify-content: center; flex-direction: column; z-index: 60; pointer-events: auto; }
+        #diary-view { top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 3, 3, 0.94); display: none; align-items: center; justify-content: center; flex-direction: column; z-index: 60; pointer-events: auto; }
         #diary-view .paper { background: #e0caaa; color: #2b1704; padding: 30px; border-radius: 4px; max-width: 480px; font-family: 'Georgia', serif; line-height: 1.5; border: 2px solid #855223; }
         #diary-view h3 { margin-top: 0; color: #8a340b; border-bottom: 1px dashed #855223; }
         #diary-view .sub { color: #ccc; margin-top: 12px; font-size: 13px; }
 
-        #screen-overlay { top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,5,2,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; pointer-events: auto; }
-        #screen-overlay h1 { color: #ff4400; font-size: 2.5vw; text-shadow: 0 0 15px #ff2200; text-align: center; margin-bottom: 25px; white-space: pre-line; }
-        #action-btn { padding: 14px 30px; font-size: 18px; font-family: 'Courier New', Courier, monospace; background: #3b1808; color: #ffcc66; border: 2px solid #b8621d; cursor: pointer; }
-        #action-btn:hover { background: #993300; color: #fff; }
+        #screen-overlay { top: 0; left: 0; width: 100%; height: 100%; background: rgba(20,2,2,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; pointer-events: auto; }
+        #screen-overlay h1 { color: #ff2222; font-size: 2.5vw; text-shadow: 0 0 15px #ff0000; text-align: center; margin-bottom: 25px; white-space: pre-line; }
+        #action-btn { padding: 14px 30px; font-size: 18px; font-family: 'Courier New', Courier, monospace; background: #3b0808; color: #ffcc66; border: 2px solid #b81d1d; cursor: pointer; }
+        #action-btn:hover { background: #990000; color: #fff; }
 
-        .click-to-start { position: absolute; top:0; left:0; width:100%; height:100%; background: #1a0f05; color: #ffcc66; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; cursor: pointer; text-align: center; }
+        /* Smiley Flash Horror Effect */
+        #smiley-flash {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(255,230,0,0.8) 0%, rgba(150,0,0,0.9) 100%);
+            display: none; justify-content: center; align-items: center; z-index: 500; pointer-events: none;
+        }
+        #smiley-face-img {
+            width: 320px; height: 320px; border-radius: 50%; background: #ffe600;
+            border: 12px solid #000; box-shadow: 0 0 80px #ff0000; position: relative;
+        }
+        .smiley-eye { position: absolute; top: 80px; width: 45px; height: 75px; background: #000; border-radius: 50%; }
+        .smiley-eye.left { left: 75px; } .smiley-eye.right { right: 75px; }
+        .smiley-mouth { position: absolute; bottom: 50px; left: 60px; width: 175px; height: 85px; border-bottom: 20px solid #000; border-radius: 0 0 100px 100px; }
+
+        .click-to-start { position: absolute; top:0; left:0; width:100%; height:100%; background: #1a0505; color: #ffcc66; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; cursor: pointer; text-align: center; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Tone/14.8.49/Tone.js"></script>
@@ -50,31 +53,25 @@
 <body>
 
     <div id="start-screen" class="click-to-start">
-        <h2>LEVEL 2: DESERT CANYON COMPLEX</h2>
-        <p style="font-size: 15px; color: #d4a775; max-width: 520px; line-height: 1.6;">
-            Follow the <b>dark brown path</b> guiding you through the canyon.<br>
-            Locate 4 Sandstone Buttons to break the Northern Gate.<br>
-            Drive the Cruiser [E] | Jump with [Space]<br>
-            Press [H] anytime for a target hint.
+        <h2>LEVEL 2: THE SMILEY MONSTER'S STOMACH</h2>
+        <p style="font-size: 15px; color: #d47575; max-width: 540px; line-height: 1.6;">
+            You are trapped inside the pocket-dimension stomach of the <b>Smiley Face Monster</b>.<br>
+            Stay on the <b>DARK BROWN PATH</b>. Bare flesh will burn you with stomach acid.<br>
+            The <b>Insectoid Police Guards</b> are the monster's immune system.<br>
+            <b>They CANNOT step onto the brown path.</b><br>
+            Activate 4 Hormone Releasers to open the Biological Sphincter Door behind spawn.<br>
+            Press [Space] to Jump | [H] for Target Hint.
         </p>
-        <span style="font-size: 18px; border: 1px solid #ffcc66; padding: 10px 24px; margin-top: 15px;">Enter Desert Complex</span>
+        <span style="font-size: 18px; border: 1px solid #ff4444; padding: 10px 24px; margin-top: 15px;">Enter Stomach Dimension</span>
     </div>
 
     <div id="crosshair" class="overlay">+</div>
-    <div id="status-hud" class="overlay">Gate Buttons: <span id="button-count">0</span>/4</div>
+    <div id="status-hud" class="overlay">Hormone Releasers: <span id="button-count">0</span>/4</div>
+    <div id="health-hud" class="overlay">Acid Resistance: <span id="health-count">100</span>%</div>
     <div id="inventory-hud" class="overlay">Keys: <span id="key-status">None</span></div>
-    <div id="car-hud" class="overlay">Fuel: <span id="fuel-count">100</span>% | Controls: [W/S] Gas/Brake, [A/D] Steer, [E] Exit</div>
     <div id="interact-prompt" class="overlay"></div>
     <div id="flash-text" class="overlay"></div>
     <div id="hint-text" class="overlay"></div>
-
-    <div id="windshield-overlay">
-        <div id="dash-reflection">
-            <span>SPEED: <span id="car-speed">0</span> MPH</span>
-            <span>DESERT PATROL UNIT</span>
-            <span>FUEL: <span id="dash-fuel">100</span>%</span>
-        </div>
-    </div>
 
     <div id="diary-view" class="overlay">
         <div class="paper">
@@ -89,8 +86,16 @@
         <button id="action-btn">Action</button>
     </div>
 
+    <div id="smiley-flash">
+        <div id="smiley-face-img">
+            <div class="smiley-eye left"></div>
+            <div class="smiley-eye right"></div>
+            <div class="smiley-mouth"></div>
+        </div>
+    </div>
+
 <script>
-// --- LAZY AUDIO ENGINE ---
+// --- AUDIO ENGINE ---
 let audioInitialized = false;
 let synthHeartbeat, synthAmbience, synthSiren;
 
@@ -99,26 +104,24 @@ function initAudio() {
     try {
         Tone.start();
         synthHeartbeat = new Tone.MembraneSynth().toDestination();
-        synthHeartbeat.volume.value = -8;
+        synthHeartbeat.volume.value = -6;
         
-        const filter = new Tone.Filter(220, "lowpass").toDestination();
+        const filter = new Tone.Filter(180, "lowpass").toDestination();
         synthAmbience = new Tone.NoiseSynth({ noise: { type: "brown" }, envelope: { attack: 2, sustain: 1, release: 2 } }).connect(filter);
-        synthAmbience.volume.value = -18;
+        synthAmbience.volume.value = -16;
         synthAmbience.triggerAttack();
 
         synthSiren = new Tone.Synth().toDestination();
-        synthSiren.volume.value = -16;
+        synthSiren.volume.value = -14;
         audioInitialized = true;
-    } catch(e) {
-        console.warn("Audio context blocked or disabled", e);
-    }
+    } catch(e) { console.warn("Audio Context blocked", e); }
 }
 
 function playHeartbeat() { if (audioInitialized && synthHeartbeat) synthHeartbeat.triggerAttackRelease("C1", "8n"); }
-function triggerDoorAlarm() {
+function triggerAlarmSound() {
     if (!audioInitialized || !synthSiren) return;
-    synthSiren.triggerAttackRelease("A4", "0.2");
-    setTimeout(() => synthSiren.triggerAttackRelease("E5", "0.3"), 200);
+    synthSiren.triggerAttackRelease("G4", "0.2");
+    setTimeout(() => synthSiren.triggerAttackRelease("C5", "0.3"), 180);
 }
 
 // --- GAME STATE ---
@@ -127,14 +130,9 @@ let hasBrassKey = false;
 let isReadingDiary = false;
 let isGameOver = false;
 let isVictorious = false;
+let playerHealth = 100.0;
 
-// Driving state
-let inCar = false;
-let carFuel = 100.0;
-let carSpeed = 0.0;
-let carAngle = 0.0;
-
-// Jumping & Physics state
+// Jumping & Physics
 let velocityY = 0;
 let isGrounded = true;
 const gravity = 22.0;
@@ -149,65 +147,42 @@ const ui = {
     diaryTitle: document.getElementById('diary-title'),
     diaryText: document.getElementById('diary-text'),
     btnCount: document.getElementById('button-count'),
+    healthCount: document.getElementById('health-count'),
     keyStatus: document.getElementById('key-status'),
-    carHud: document.getElementById('car-hud'),
-    fuelCount: document.getElementById('fuel-count'),
-    dashFuel: document.getElementById('dash-fuel'),
-    carSpeedHud: document.getElementById('car-speed'),
-    windshield: document.getElementById('windshield-overlay'),
     screenOverlay: document.getElementById('screen-overlay'),
     screenTitle: document.getElementById('screen-title'),
-    actionBtn: document.getElementById('action-btn')
+    actionBtn: document.getElementById('action-btn'),
+    smileyFlash: document.getElementById('smiley-flash')
 };
 
 // --- THREE.JS SCENE SETUP ---
 const scene = new THREE.Scene();
-const fogColor = 0x472e19;
+const fogColor = 0x3d0a0a; // Fleshy reddish-brown fog
 scene.background = new THREE.Color(fogColor);
-
-// Thick Atmospheric Dust Fog
-scene.fog = new THREE.FogExp2(fogColor, 0.018);
+scene.fog = new THREE.FogExp2(fogColor, 0.016);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Lighting
-const ambientLight = new THREE.AmbientLight(0xffb870, 0.6);
+// Fleshy Biological Lighting
+const ambientLight = new THREE.AmbientLight(0xff5544, 0.6);
 scene.add(ambientLight);
 
-const dirLight = new THREE.DirectionalLight(0xff8833, 0.85);
-dirLight.position.set(50, 70, 30);
+const dirLight = new THREE.DirectionalLight(0xff2200, 0.8);
+dirLight.position.set(40, 60, 20);
 scene.add(dirLight);
-
-// Lazy Mirror Target Initialization
-let mirrorRenderTarget, mirrorCamera, mirrorMesh;
-function initMirror() {
-    if (mirrorRenderTarget) return;
-    mirrorRenderTarget = new THREE.WebGLRenderTarget(256, 128);
-    mirrorCamera = new THREE.PerspectiveCamera(60, 2, 0.1, 100);
-    mirrorMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.4), new THREE.MeshBasicMaterial({ map: mirrorRenderTarget.texture }));
-    mirrorMesh.position.set(0, 0.5, -0.9);
-    scene.add(mirrorMesh);
-}
-
-// Sun Visual
-const sunGeo = new THREE.SphereGeometry(14, 16, 16);
-const sunMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
-const sun = new THREE.Mesh(sunGeo, sunMat);
-sun.position.set(60, 45, -110);
-scene.add(sun);
 
 // --- CONTROLS ---
 let pitch = 0, yaw = 0;
 const PI_2 = Math.PI / 2;
 const keys = { w: false, a: false, s: false, d: false, z: false, e: false, h: false, space: false };
-let playerPos = new THREE.Vector3(0, 1.7, 110);
+let playerPos = new THREE.Vector3(0, 1.7, 110); // Spawn point
 camera.position.copy(playerPos);
 
 document.addEventListener('mousemove', (e) => {
-    if (document.pointerLockElement === document.body && !isGameOver && !isVictorious && !isReadingDiary && !inCar) {
+    if (document.pointerLockElement === document.body && !isGameOver && !isVictorious && !isReadingDiary) {
         yaw -= e.movementX * 0.002;
         pitch -= e.movementY * 0.002;
         pitch = Math.max(-PI_2 + 0.1, Math.min(PI_2 - 0.1, pitch));
@@ -222,7 +197,7 @@ document.addEventListener('keydown', (e) => {
     if(e.code === 'KeyA') keys.a = true;
     if(e.code === 'KeyS') keys.s = true;
     if(e.code === 'KeyD') keys.d = true;
-    if(e.code === 'Space') { if (isGrounded && !inCar) { velocityY = jumpStrength; isGrounded = false; } keys.space = true; }
+    if(e.code === 'Space') { if (isGrounded) { velocityY = jumpStrength; isGrounded = false; } keys.space = true; }
     if(e.code === 'KeyZ') { if (!keys.z) handleZPress(); keys.z = true; }
     if(e.code === 'KeyE') { if (!keys.e) handleEPress(); keys.e = true; }
     if(e.code === 'KeyH') { if (!keys.h) showHint(); keys.h = true; }
@@ -244,8 +219,9 @@ ui.start.addEventListener('click', () => {
     document.body.requestPointerLock();
     document.getElementById('crosshair').style.display = 'block';
     document.getElementById('status-hud').style.display = 'block';
+    document.getElementById('health-hud').style.display = 'block';
     document.getElementById('inventory-hud').style.display = 'block';
-    flashText("Follow the Dark Brown Path. Press [Space] to Jump.");
+    flashText("Stay on the Brown Dirt Path! Stomach acid burns off-road!");
 });
 
 document.body.addEventListener('click', () => {
@@ -259,61 +235,73 @@ const interactables = [];
 const solidWalls = [];
 const buttons = [];
 const stalkers = [];
+const pathSegments = [];
+const acidPools = [];
 
+const matFlesh = new THREE.MeshLambertMaterial({ color: 0x5c1616 });
+const matAcid = new THREE.MeshBasicMaterial({ color: 0x66ff00, transparent: true, opacity: 0.8 });
 const matSandstone = new THREE.MeshLambertMaterial({ color: 0xc29b68 });
 const matAdobe = new THREE.MeshLambertMaterial({ color: 0xa86e42 });
 const matClay = new THREE.MeshLambertMaterial({ color: 0x824424 });
-const matDarkConcrete = new THREE.MeshLambertMaterial({ color: 0x3d2f23 });
-const matGlass = new THREE.MeshLambertMaterial({ color: 0x99aa88, transparent: true, opacity: 0.5 });
-const matInsect = new THREE.MeshLambertMaterial({ color: 0x14100c });
-const matUniform = new THREE.MeshLambertMaterial({ color: 0x47321d });
+const matWood = new THREE.MeshLambertMaterial({ color: 0x5c3a21 });
+const matBrick = new THREE.MeshLambertMaterial({ color: 0x8b2222 });
+const matDarkConcrete = new THREE.MeshLambertMaterial({ color: 0x2b1d19 });
+const matGlass = new THREE.MeshLambertMaterial({ color: 0x88aa99, transparent: true, opacity: 0.5 });
+const matInsect = new THREE.MeshLambertMaterial({ color: 0x0f1a0f });
+const matUniform = new THREE.MeshLambertMaterial({ color: 0x1a237e });
 
-// Ground Terrain & Dunes
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(280, 320), new THREE.MeshLambertMaterial({ color: 0xb58852 }));
+// Ground Flesh Floor
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(280, 320), matFlesh);
 ground.rotation.x = -Math.PI / 2; scene.add(ground);
 
-function createRollingDunes() {
-    const duneMat = new THREE.MeshLambertMaterial({ color: 0xa0713b });
-    const dunePositions = [
-        {x: -100, z: -100, r: 35, h: 12}, {x: 100, z: -90, r: 40, h: 15},
-        {x: -110, z: 80, r: 38, h: 14}, {x: 100, z: 90, r: 45, h: 18},
-        {x: 0, z: -150, r: 50, h: 22}, {x: 0, z: 150, r: 45, h: 16}
-    ];
-    
-    dunePositions.forEach(d => {
-        let dune = new THREE.Mesh(new THREE.ConeGeometry(d.r, d.h, 12), duneMat);
-        dune.position.set(d.x, d.h / 2 - 1, d.z);
-        scene.add(dune);
-    });
-}
-createRollingDunes();
-
-// --- DARK BROWN GUIDANCE PATH ---
-function createBrownPath() {
+// --- CONNECTED SAFE BROWN PATH NETWORK ---
+function createBrownPathSegment(x, z, w, d) {
     const pathMat = new THREE.MeshLambertMaterial({ color: 0x362112, polygonOffset: true, polygonOffsetFactor: -1 });
-    
-    // Path segments connecting key areas (Spawn -> Precinct -> Tent -> Buttons -> Exit Gate)
-    const segments = [
-        // Main Spine (Spawn to Gate)
-        { x: 0, z: -12.5, w: 7, d: 245 },
-        // Branch to Campsite / Key Tent
-        { x: -11, z: -26, w: 22, d: 6 },
-        // Branch to Button 3 (East Sector)
-        { x: 22, z: -26, w: 44, d: 6 },
-        // Branch to Button 4 (West Sector)
-        { x: -44, z: -26, w: 88, d: 6 },
-        // Path to Button 1 (North Clay Tower)
-        { x: -38, z: 27.5, w: 6, d: 55 }
-    ];
+    let p = new THREE.Mesh(new THREE.PlaneGeometry(w, d), pathMat);
+    p.rotation.x = -Math.PI / 2;
+    p.position.set(x, 0.02, z);
+    scene.add(p);
 
-    segments.forEach(s => {
-        let p = new THREE.Mesh(new THREE.PlaneGeometry(s.w, s.d), pathMat);
-        p.rotation.x = -Math.PI / 2;
-        p.position.set(s.x, 0.02, s.z);
-        scene.add(p);
-    });
+    let seg = { minX: x - w/2, maxX: x + w/2, minZ: z - d/2, maxZ: z + d/2 };
+    pathSegments.push(seg);
 }
-createBrownPath();
+
+function buildConnectedPathNetwork() {
+    // Main Spine (Spawn to Northern Gate)
+    createBrownPathSegment(0, -12.5, 8, 245);
+    // Path to Campsite / Brass Key Tent
+    createBrownPathSegment(-12, -26, 24, 8);
+    // Path to East Sector Button 3
+    createBrownPathSegment(22, -26, 44, 8);
+    // Path to West Sector Button 4
+    createBrownPathSegment(-44, -26, 88, 8);
+    // Path to Button 1 Sky Building Tower
+    createBrownPathSegment(-38, 27.5, 8, 55);
+}
+buildConnectedPathNetwork();
+
+function isPositionOnPath(pos, radius = 0.5) {
+    for (let seg of pathSegments) {
+        if (pos.x + radius >= seg.minX && pos.x - radius <= seg.maxX &&
+            pos.z + radius >= seg.minZ && pos.z - radius <= seg.maxZ) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// --- OFF-PATH STOMACH ACID POOLS ---
+function createAcidPool(x, z, r) {
+    let pool = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.1, 16), matAcid);
+    pool.position.set(x, 0.05, z);
+    scene.add(pool);
+    acidPools.push({ x: x, z: z, r: r });
+}
+
+createAcidPool(-60, 20, 14);
+createAcidPool(60, -40, 18);
+createAcidPool(-25, -80, 12);
+createAcidPool(75, 50, 16);
 
 function addCollider(x, z, w, d, ref = null) {
     let col = { minX: x - w/2, maxX: x + w/2, minZ: z - d/2, maxZ: z + d/2, ref: ref };
@@ -326,28 +314,26 @@ function removeCollider(ref) {
     if (idx > -1) solidWalls.splice(idx, 1);
 }
 
-// Outer Perimeter
-const h = 20;
-let n = new THREE.Mesh(new THREE.BoxGeometry(240, h, 6), matSandstone); n.position.set(0, h/2, -140); scene.add(n); addCollider(0, -140, 240, 6);
-let s = new THREE.Mesh(new THREE.BoxGeometry(240, h, 6), matSandstone); s.position.set(0, h/2, 140); scene.add(s); addCollider(0, 140, 240, 6);
-let e = new THREE.Mesh(new THREE.BoxGeometry(6, h, 280), matSandstone); e.position.set(120, h/2, 0); scene.add(e); addCollider(120, 0, 6, 280);
-let w = new THREE.Mesh(new THREE.BoxGeometry(6, h, 280), matSandstone); w.position.set(-120, h/2, 0); scene.add(w); addCollider(-120, 0, 6, 280);
+// Outer Perimeter Flesh Walls
+const h = 22;
+let n = new THREE.Mesh(new THREE.BoxGeometry(240, h, 6), matFlesh); n.position.set(0, h/2, -140); scene.add(n); addCollider(0, -140, 240, 6);
+let s = new THREE.Mesh(new THREE.BoxGeometry(240, h, 6), matFlesh); s.position.set(0, h/2, 140); scene.add(s); addCollider(0, 140, 240, 6);
+let e = new THREE.Mesh(new THREE.BoxGeometry(6, h, 280), matFlesh); e.position.set(120, h/2, 0); scene.add(e); addCollider(120, 0, 6, 280);
+let w = new THREE.Mesh(new THREE.BoxGeometry(6, h, 280), matFlesh); w.position.set(-120, h/2, 0); scene.add(-120, 0, 6, 280);
 
-// --- DENSE CITY ARCHITECTURE ---
-function buildDenseBlock(x, z, width, depth, stories, matType, isLocked = false, lockKeyId = null, diaryData = null) {
+// --- DENSE HOUSES WITH SUPPORTED STAIRS & MATCHED MATERIALS ---
+function buildHouseWithInterior(x, z, width, depth, stories, matType, isLocked = false, lockKeyId = null, diaryData = null) {
     const wallT = 0.8;
     const storyH = 4.8;
     const totalH = storyH * stories;
-    const mat = matType === 'adobe' ? matAdobe : (matType === 'clay' ? matClay : matSandstone);
 
-    if (!isLocked && !diaryData && stories > 1) {
-        const blockMesh = new THREE.Mesh(new THREE.BoxGeometry(width, totalH, depth), mat);
-        blockMesh.position.set(x, totalH/2, z);
-        scene.add(blockMesh);
-        addCollider(x, z, width, depth);
-        return { x, z, stories, topY: totalH };
-    }
+    let mat = matSandstone;
+    if (matType === 'adobe') mat = matAdobe;
+    else if (matType === 'clay') mat = matClay;
+    else if (matType === 'wood') mat = matWood;
+    else if (matType === 'brick') mat = matBrick;
 
+    // Walls
     let back = new THREE.Mesh(new THREE.BoxGeometry(width, totalH, wallT), mat); back.position.set(x, totalH/2, z - depth/2); scene.add(back); addCollider(x, z - depth/2, width, wallT);
     let left = new THREE.Mesh(new THREE.BoxGeometry(wallT, totalH, depth), mat); left.position.set(x - width/2, totalH/2, z); scene.add(left); addCollider(x - width/2, z, wallT, depth);
     let right = new THREE.Mesh(new THREE.BoxGeometry(wallT, totalH, depth), mat); right.position.set(x + width/2, totalH/2, z); scene.add(right); addCollider(x + width/2, z, wallT, depth);
@@ -356,13 +342,21 @@ function buildDenseBlock(x, z, width, depth, stories, matType, isLocked = false,
     let frontR = new THREE.Mesh(new THREE.BoxGeometry((width-3.2)/2, totalH, wallT), mat); frontR.position.set(x + (width/4 + 0.8), totalH/2, z + depth/2); scene.add(frontR); addCollider(x + (width/4 + 0.8), z + depth/2, (width-3.2)/2, wallT);
     let lintel = new THREE.Mesh(new THREE.BoxGeometry(3.2, totalH - 3.8, wallT), mat); lintel.position.set(x, 3.8 + (totalH - 3.8)/2, z + depth/2); scene.add(lintel);
 
+    // Roof / Floor Deck
+    let roof = new THREE.Mesh(new THREE.BoxGeometry(width, 0.6, depth), matDarkConcrete);
+    roof.position.set(x, totalH, z); scene.add(roof);
+
+    // Supporting Block Stairs for Two-Story Houses
     if (stories > 1) {
-        for(let st=0; st<stories; st++) {
-            const stairBase = new THREE.Mesh(new THREE.BoxGeometry(2.4, storyH, depth/2), matDarkConcrete);
-            stairBase.position.set(x + width/2 - 1.6, (st + 0.5) * storyH, z - depth/4);
-            stairBase.rotation.x = Math.PI / 6;
-            scene.add(stairBase);
-            addCollider(x + width/2 - 1.6, z - depth/4, 2.4, depth/2);
+        for (let st = 0; st < 6; st++) {
+            let stepY = (st + 1) * 0.8;
+            let stepZ = z - depth/3 + (st * 1.2);
+
+            // Solid triangular support block underneath step
+            let supportBlock = new THREE.Mesh(new THREE.BoxGeometry(2.8, stepY, 1.2), matDarkConcrete);
+            supportBlock.position.set(x + width/2 - 2.0, stepY / 2, stepZ);
+            scene.add(supportBlock);
+            addCollider(x + width/2 - 2.0, stepZ, 2.8, 1.2);
         }
     }
 
@@ -388,55 +382,40 @@ function buildDenseBlock(x, z, width, depth, stories, matType, isLocked = false,
     return { x, z, stories, topY: totalH };
 }
 
-// Generate Dense City Blocks
-for (let gx = -100; gx <= 100; gx += 22) {
-    for (let gz = -120; gz <= 120; gz += 26) {
+// Generate Non-Overlapping Houses
+const houseMats = ['adobe', 'sandstone', 'clay', 'wood', 'brick'];
+for (let gx = -100; gx <= 100; gx += 26) {
+    for (let gz = -120; gz <= 120; gz += 28) {
         if (Math.abs(gx) < 25 && Math.abs(gz) < 25) continue;
         if (Math.abs(gx) < 15 && gz > 90) continue;
         if (Math.abs(gx) < 15 && gz < -110) continue;
 
-        let matChoice = (Math.abs(gx + gz) % 3 === 0) ? 'adobe' : ((Math.abs(gx) % 2 === 0) ? 'sandstone' : 'clay');
-        let storyChoice = 1 + Math.floor(Math.abs(Math.sin(gx * gz)) * 3);
-        buildDenseBlock(gx, gz, 18, 22, storyChoice, matChoice);
+        let matChoice = houseMats[Math.abs(gx + gz) % houseMats.length];
+        let storyChoice = 1 + Math.floor(Math.abs(Math.sin(gx * gz)) * 2);
+        buildHouseWithInterior(gx, gz, 18, 22, storyChoice, matChoice);
     }
 }
 
-// Key Locations & Precinct
-let b1 = buildDenseBlock(-38, 55, 18, 22, 3, 'clay', false, null, { title: "Scorched Log", text: "Button 1 sits atop this northern red-clay tower roof." });
-let bLockedBtn = buildDenseBlock(44, -26, 18, 22, 2, 'adobe', true, 'brass_key');
-let bRage = buildDenseBlock(-44, -78, 18, 22, 1, 'sandstone', true, 'brass_key', { title: "Desert Memo", text: "No activation button inside this unit. Completely empty." });
+// Key Building & Button Locations
+let b1 = buildHouseWithInterior(-38, 55, 18, 22, 3, 'clay', false, null, { title: "Stomach Log", text: "Button 1 sits atop this northern tower roof." });
+buildHouseWithInterior(44, -26, 18, 22, 2, 'adobe', true, 'brass_key');
+buildHouseWithInterior(-44, -78, 18, 22, 1, 'brick', true, 'brass_key');
 
-const psBody = new THREE.Mesh(new THREE.BoxGeometry(36, 10, 28), matSandstone); psBody.position.set(0, 5, 0); scene.add(psBody);
-addCollider(0, -13, 36, 2); addCollider(-17, 0, 2, 28); addCollider(17, 0, 2, 28);
-addCollider(-11, 14, 14, 2); addCollider(11, 14, 14, 2);
-
-const psSign = new THREE.Mesh(new THREE.BoxGeometry(12, 2, 0.5), new THREE.MeshBasicMaterial({ color: 0x8a4010 }));
-psSign.position.set(0, 8.5, 14.2); scene.add(psSign);
-
-const autoDoorL = new THREE.Mesh(new THREE.BoxGeometry(3.8, 4.5, 0.2), matGlass); autoDoorL.position.set(-1.9, 2.25, 14); scene.add(autoDoorL);
-const autoDoorR = new THREE.Mesh(new THREE.BoxGeometry(3.8, 4.5, 0.2), matGlass); autoDoorR.position.set(1.9, 2.25, 14); scene.add(autoDoorR);
-const autoDoorCol = addCollider(0, 14, 7.6, 0.5, autoDoorL);
-
-let policeDoorTriggered = false;
-
-// Campsite & Key
-function buildGiantDesertTent(x, z) {
+// Campsite & Brass Key Tent
+function buildTent(x, z) {
     const tentMat = new THREE.MeshLambertMaterial({ color: 0x7a3e1d, side: THREE.DoubleSide });
     const tent = new THREE.Mesh(new THREE.ConeGeometry(7, 6, 4), tentMat);
     tent.position.set(x, 3, z); scene.add(tent); addCollider(x, z, 7, 7);
-
-    const fire = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1, 0.4), new THREE.MeshBasicMaterial({ color: 0xff3300 }));
-    fire.position.set(x + 5, 0.2, z + 5); scene.add(fire);
 
     const keyMesh = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.1, 8, 16), new THREE.MeshBasicMaterial({ color: 0xffd700 }));
     keyMesh.position.set(x + 2.5, 0.6, z + 2.5); keyMesh.rotation.x = Math.PI / 2; scene.add(keyMesh);
     keyMesh.userData = { type: 'key', keyId: 'brass_key' };
     interactables.push(keyMesh);
 }
-buildGiantDesertTent(-22, -26);
+buildTent(-22, -26);
 
-// Sandstone Buttons
-function createSandstoneButton(x, y, z, id) {
+// HORMONE RELEASER BUTTONS
+function createHormoneButton(x, y, z, id) {
     let base = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.8, 1.4), matSandstone); base.position.set(x, y, z); scene.add(base);
     let btn = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.4, 0.7), new THREE.MeshLambertMaterial({ color: 0xff2200 }));
     btn.position.set(x, y + 0.4, z); scene.add(btn);
@@ -444,38 +423,33 @@ function createSandstoneButton(x, y, z, id) {
     interactables.push(btn); buttons.push(btn);
 }
 
-createSandstoneButton(-38, b1.topY + 0.4, 55, 1);
-createSandstoneButton(0, 0.4, -5, 2);
-createSandstoneButton(44, 0.4, -26, 3);
-createSandstoneButton(-88, 0.4, -26, 4);
+// Sky Button on Northern Clay Tower Roof
+createHormoneButton(-38, b1.topY + 0.4, 55, 1);
+createHormoneButton(0, 0.4, -5, 2);
+createHormoneButton(44, 0.4, -26, 3);
+createHormoneButton(-88, 0.4, -26, 4);
 
-// Exit Gate
-const gateGroup = new THREE.Group(); gateGroup.position.set(0, 0, -135);
-for(let i = -6; i <= 6; i++) {
-    let rib = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 12), new THREE.MeshLambertMaterial({ color: 0xd9c09e }));
-    rib.position.set(i * 1.3, 6, 0); gateGroup.add(rib);
+// BIOLOGICAL SPHINCTER SPAWN DOOR (LOCATED BEHIND PLAYER AT SPAWN)
+const sphincterGroup = new THREE.Group(); sphincterGroup.position.set(0, 0, 118);
+const sphincterMat = new THREE.MeshLambertMaterial({ color: 0x8b0000 });
+for (let i = 0; i < 8; i++) {
+    let musclePetal = new THREE.Mesh(new THREE.BoxGeometry(2.5, 12, 1.5), sphincterMat);
+    musclePetal.rotation.z = (i / 8) * Math.PI * 2;
+    musclePetal.position.set(Math.cos(musclePetal.rotation.z) * 3, 6, 0);
+    sphincterGroup.add(musclePetal);
 }
-scene.add(gateGroup); addCollider(0, -135, 16, 2);
+scene.add(sphincterGroup);
+const spawnDoorCol = addCollider(0, 118, 16, 2);
 
-// Drivable Police Car
-const carGroup = new THREE.Group();
-const carBody = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.2, 4.8), new THREE.MeshLambertMaterial({ color: 0x3d2714 })); carBody.position.y = 0.8; carGroup.add(carBody);
-const carCabin = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.9, 2.2), matGlass); carCabin.position.set(0, 1.6, -0.2); carGroup.add(carCabin);
-const sirenLight = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.25, 0.3), new THREE.MeshBasicMaterial({ color: 0xff4400 })); sirenLight.position.set(0, 2.15, -0.2); carGroup.add(sirenLight);
-
-carGroup.position.set(-66, 0, -52);
-scene.add(carGroup);
-carGroup.userData = { type: 'car' }; interactables.push(carBody);
-
-// Patrol Guards
-function createInsectoidStalker(x, z, isPrecinctGuard = false) {
+// INSECTOID POLICE GUARDS (IMMUNE SYSTEM)
+function createInsectoidGuard(x, z) {
     const grp = new THREE.Group();
     const abdomen = new THREE.Mesh(new THREE.ConeGeometry(0.5, 2.2, 6), matInsect); abdomen.rotation.x = Math.PI; abdomen.position.y = 1.6; grp.add(abdomen);
     const thorax = new THREE.Mesh(new THREE.SphereGeometry(0.6, 8, 8), matInsect); thorax.position.y = 2.8; grp.add(thorax);
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 8), new THREE.MeshLambertMaterial({ color: 0xff2200 })); head.position.y = 3.5; grp.add(head);
     const vest = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.2, 0.9), matUniform); vest.position.y = 2.7; grp.add(vest);
 
-    for(let i=0; i<4; i++) {
+    for (let i = 0; i < 4; i++) {
         let leg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.8), matInsect);
         leg.position.set(i%2===0? 0.6 : -0.6, 0.9, (i>1? 0.3 : -0.3));
         leg.rotation.z = i%2===0? -0.3 : 0.3;
@@ -485,17 +459,18 @@ function createInsectoidStalker(x, z, isPrecinctGuard = false) {
     grp.position.set(x, 0, z); scene.add(grp);
 
     stalkers.push({
-        mesh: grp, speed: 4.5, isGuard: isPrecinctGuard,
+        mesh: grp, speed: 5.5,
         patrolAngle: Math.random() * Math.PI * 2,
         homePos: new THREE.Vector3(x, 0, z)
     });
 }
 
-createInsectoidStalker(-22, 0, false);
-createInsectoidStalker(22, 0, false);
-createInsectoidStalker(0, -3, true);
+createInsectoidGuard(-22, 0);
+createInsectoidGuard(22, 0);
+createInsectoidGuard(-60, 40);
+createInsectoidGuard(60, -40);
 
-// --- INTERACTION ---
+// --- INTERACTION & HINTS ---
 let activeInteractable = null;
 
 function showHint() {
@@ -505,27 +480,19 @@ function showHint() {
         let pos = b.position;
         let cardDir = pos.z < camera.position.z ? "NORTH" : "SOUTH";
         cardDir += pos.x < camera.position.x ? "-WEST" : "-EAST";
-        flashText(`HINT: Unpressed Sandstone Button towards ${cardDir}! Follow the brown path.`);
+        flashText(`HINT: Unpressed Hormone Releaser towards ${cardDir}! Follow the brown path.`);
     } else {
-        flashText("HINT: All 4 Buttons activated! Escape through Northern Gate!");
+        flashText("HINT: All 4 Releasers active! Escape through Biological Sphincter Door behind spawn!");
     }
 }
 
 function handleEPress() {
-    if (activeInteractable && activeInteractable.parent === carGroup || inCar) {
-        inCar = !inCar;
-        if (inCar) {
-            initMirror();
-            flashText("Entered Desert Cruiser. Drive with [W/S/A/D].");
-            ui.windshield.style.display = 'block';
-            ui.carHud.style.display = 'block';
-            if (mirrorMesh) mirrorMesh.visible = true;
+    let distToSpawnDoor = Math.hypot(camera.position.x - 0, camera.position.z - 118);
+    if (distToSpawnDoor < 6.0) {
+        if (buttonsPressed < 4) {
+            flashText("This isn't a normal door... it's a sphincter muscle of the creature's body! Find the hormone releasers!");
         } else {
-            flashText("Exited Vehicle.");
-            ui.windshield.style.display = 'none';
-            ui.carHud.style.display = 'none';
-            if (mirrorMesh) mirrorMesh.visible = false;
-            camera.position.set(carGroup.position.x + 2, 1.7, carGroup.position.z);
+            triggerWin();
         }
     }
 }
@@ -575,12 +542,14 @@ function handleZPress() {
             activeInteractable.position.y -= 0.18;
             activeInteractable.material.color.setHex(0x00ff00);
             buttonsPressed++; ui.btnCount.innerText = buttonsPressed;
-            playHeartbeat(); flashText(`Button Activated (${buttonsPressed}/4)`);
-            gateGroup.position.y += 2.2;
+            playHeartbeat(); flashText(`Hormone Releaser Activated (${buttonsPressed}/4)`);
+            
+            // Open sphincter door slightly
+            sphincterGroup.position.y += 1.8;
 
             if (buttonsPressed === 4) {
-                flashText("NORTHERN GATE RAISED! ESCAPE!");
-                solidWalls.splice(solidWalls.findIndex(w => w.minZ === -135), 1);
+                flashText("BIOLOGICAL SPHINCTER DOOR FULLY OPEN! ESCAPE BEHIND SPAWN!");
+                removeCollider(spawnDoorCol.ref);
             }
         }
     }
@@ -592,12 +561,34 @@ function flashText(msg) {
 }
 
 function checkCollisions(newPos, radius = 0.6) {
-    for(let w of solidWalls) {
+    for (let w of solidWalls) {
         if (newPos.x + radius > w.minX && newPos.x - radius < w.maxX &&
             newPos.z + radius > w.minZ && newPos.z - radius < w.maxZ) return true;
     }
     return false;
 }
+
+function triggerWin() {
+    isVictorious = true; document.exitPointerLock();
+    ui.screenTitle.innerText = "STOMACH DIMENSION ESCAPED!\n\nYOU SURVIVED THE SMILEY MONSTER!";
+    ui.actionBtn.innerText = "Proceed to Level 3";
+    ui.actionBtn.onclick = () => { window.location.href = '/levelthree.html'; };
+    ui.screenOverlay.style.display = 'flex';
+}
+
+// --- SUBLIMINAL HORROR FLASH LOGIC ---
+function triggerSmileyFlash() {
+    if (isGameOver || isVictorious) return;
+    ui.smileyFlash.style.display = 'flex';
+    triggerAlarmSound();
+    setTimeout(() => { ui.smileyFlash.style.display = 'none'; }, 140);
+}
+
+setInterval(() => {
+    if (Math.random() < 0.35) {
+        triggerSmileyFlash();
+    }
+}, 8000);
 
 // --- MAIN LOOP ---
 let lastTime = performance.now();
@@ -610,64 +601,8 @@ function animate() {
 
     if (isGameOver || isVictorious) return;
 
-    // Precinct sensors
-    let distToPrecinctDoor = Math.hypot(camera.position.x - 0, camera.position.z - 14);
-    if (distToPrecinctDoor < 6) {
-        autoDoorL.position.x = THREE.MathUtils.lerp(autoDoorL.position.x, -4.5, 0.08);
-        autoDoorR.position.x = THREE.MathUtils.lerp(autoDoorR.position.x, 4.5, 0.08);
-        removeCollider(autoDoorCol.ref);
-
-        if (!policeDoorTriggered) {
-            policeDoorTriggered = true;
-            triggerDoorAlarm();
-            flashText("PRECINCT SENSORS TRIGGERED! GUARD ALERTED!");
-        }
-    } else {
-        autoDoorL.position.x = THREE.MathUtils.lerp(autoDoorL.position.x, -1.9, 0.08);
-        autoDoorR.position.x = THREE.MathUtils.lerp(autoDoorR.position.x, 1.9, 0.08);
-    }
-
-    // Vehicle physics
-    if (inCar) {
-        if (carFuel > 0 && (keys.w || keys.s)) {
-            carFuel = Math.max(0, carFuel - dt * 2.5);
-            let accel = keys.w ? 18.0 : -10.0;
-            carSpeed = THREE.MathUtils.lerp(carSpeed, accel, dt * 2.0);
-        } else {
-            carSpeed = THREE.MathUtils.lerp(carSpeed, 0, dt * 3.0);
-        }
-
-        if (Math.abs(carSpeed) > 0.5) {
-            if (keys.a) carAngle += dt * 1.8;
-            if (keys.d) carAngle -= dt * 1.8;
-        }
-
-        carGroup.rotation.y = carAngle;
-        let moveDist = carSpeed * dt;
-        let nextCarX = carGroup.position.x - Math.sin(carAngle) * moveDist;
-        let nextCarZ = carGroup.position.z - Math.cos(carAngle) * moveDist;
-
-        if (!checkCollisions(new THREE.Vector3(nextCarX, 0.8, nextCarZ), 1.8)) {
-            carGroup.position.set(nextCarX, 0.8, nextCarZ);
-        } else { carSpeed = -carSpeed * 0.4; }
-
-        camera.position.set(carGroup.position.x, 1.8, carGroup.position.z);
-        camera.rotation.set(0, carAngle + Math.PI, 0);
-
-        if (mirrorRenderTarget && mirrorCamera) {
-            mirrorCamera.position.copy(camera.position);
-            mirrorCamera.rotation.set(0, carAngle, 0);
-            renderer.setRenderTarget(mirrorRenderTarget);
-            renderer.render(scene, mirrorCamera);
-            renderer.setRenderTarget(null);
-        }
-
-        ui.fuelCount.innerText = Math.floor(carFuel);
-        ui.dashFuel.innerText = Math.floor(carFuel);
-        ui.carSpeedHud.innerText = Math.abs(Math.floor(carSpeed * 3));
-    }
-    // On-foot movement & Jumping Physics
-    else if (document.pointerLockElement === document.body && !isReadingDiary) {
+    // Movement & Physics
+    if (document.pointerLockElement === document.body && !isReadingDiary) {
         let dirX = Number(keys.d) - Number(keys.a);
         let dirZ = Number(keys.w) - Number(keys.s);
 
@@ -686,7 +621,7 @@ function animate() {
         let nextZ = camera.position.z + moveVec.z * speed * dt;
         if (!checkCollisions(new THREE.Vector3(camera.position.x, camera.position.y, nextZ))) camera.position.z = nextZ;
 
-        // Apply Vertical Gravity & Jump Mechanics
+        // Apply Vertical Gravity & Jumping
         if (!isGrounded) {
             velocityY -= gravity * dt;
             camera.position.y += velocityY * dt;
@@ -696,73 +631,104 @@ function animate() {
                 isGrounded = true;
             }
         }
-    }
 
-    // AI Guard movement
-    for (let s of stalkers) {
-        let target = camera.position;
-        let dist = s.mesh.position.distanceTo(target);
+        // Check if player is on the safe brown path
+        let onPath = isPositionOnPath(camera.position);
+        if (!onPath) {
+            playerHealth -= dt * 4.0; // Burn from bare stomach tissue
+            flashText("WARNING: Stomach tissue burning your feet! Return to Brown Path!");
 
-        if (s.isGuard && policeDoorTriggered && dist < 35) {
-            let chaseDir = new THREE.Vector3().subVectors(target, s.mesh.position).normalize();
-            s.mesh.position.addScaledVector(chaseDir, s.speed * dt);
-            s.mesh.lookAt(target.x, s.mesh.position.y, target.z);
-        }
-        else if (!s.isGuard) {
-            s.patrolAngle += dt * 0.4;
-            let px = Math.cos(s.patrolAngle) * 26;
-            let pz = Math.sin(s.patrolAngle) * 26;
-            let patTarget = new THREE.Vector3(px, 0, pz);
-            let pDir = new THREE.Vector3().subVectors(patTarget, s.mesh.position).normalize();
-            s.mesh.position.addScaledVector(pDir, s.speed * 0.6 * dt);
-            s.mesh.lookAt(patTarget.x, s.mesh.position.y, patTarget.z);
+            // Check stomach acid pools
+            for (let acid of acidPools) {
+                let distToAcid = Math.hypot(camera.position.x - acid.x, camera.position.z - acid.z);
+                if (distToAcid < acid.r) {
+                    playerHealth -= dt * 15.0; // Severe acid burn
+                }
+            }
         }
 
-        if (dist < 1.4 && !inCar) {
+        ui.healthCount.innerText = Math.max(0, Math.floor(playerHealth));
+        if (playerHealth <= 0) {
             isGameOver = true; document.exitPointerLock();
-            ui.screenTitle.innerText = "DETAINED BY DESERT PATROL.";
+            ui.screenTitle.innerText = "DISSOLVED BY STOMACH ACID.";
             ui.actionBtn.innerText = "Try Again";
             ui.actionBtn.onclick = () => window.location.reload();
             ui.screenOverlay.style.display = 'flex';
         }
     }
 
-    // Win condition
-    if (buttonsPressed === 4 && camera.position.z < -138) {
-        isVictorious = true; document.exitPointerLock();
-        ui.screenTitle.innerText = "DESERT SECTOR CLEARED!\n\nYOU ESCAPED THE COMPLEX!";
-        ui.actionBtn.innerText = "Proceed to Level 3";
-        ui.actionBtn.onclick = () => { window.location.href = '/levelthree.html'; };
-        ui.screenOverlay.style.display = 'flex';
+    // AI Guard movement (Insectoid Immune System)
+    for (let s of stalkers) {
+        let target = camera.position;
+        let dist = s.mesh.position.distanceTo(target);
+
+        // GUARDFENCE: Insectoid guards DO NOT STEP onto the brown path safe zone
+        let onPath = isPositionOnPath(camera.position);
+
+        if (!onPath && dist < 30) {
+            // Hunt player when off the safe path
+            let chaseDir = new THREE.Vector3().subVectors(target, s.mesh.position).normalize();
+            let nextGuardPos = s.mesh.position.clone().addScaledVector(chaseDir, s.speed * dt);
+
+            if (!isPositionOnPath(nextGuardPos)) {
+                s.mesh.position.copy(nextGuardPos);
+                s.mesh.lookAt(target.x, s.mesh.position.y, target.z);
+            }
+        } else {
+            // Patrol around off-path tissue
+            s.patrolAngle += dt * 0.5;
+            let px = s.homePos.x + Math.cos(s.patrolAngle) * 20;
+            let pz = s.homePos.z + Math.sin(s.patrolAngle) * 20;
+            let patTarget = new THREE.Vector3(px, 0, pz);
+
+            if (!isPositionOnPath(patTarget)) {
+                let pDir = new THREE.Vector3().subVectors(patTarget, s.mesh.position).normalize();
+                s.mesh.position.addScaledVector(pDir, s.speed * 0.5 * dt);
+                s.mesh.lookAt(patTarget.x, s.mesh.position.y, patTarget.z);
+            }
+        }
+
+        if (dist < 1.6 && !onPath) {
+            isGameOver = true; document.exitPointerLock();
+            ui.screenTitle.innerText = "CONSUMED BY THE MONSTER'S IMMUNE SYSTEM.";
+            ui.actionBtn.innerText = "Try Again";
+            ui.actionBtn.onclick = () => window.location.reload();
+            ui.screenOverlay.style.display = 'flex';
+        }
     }
 
-    // Interaction Prompt check
+    // Interaction Prompt
     activeInteractable = null;
     ui.prompt.style.display = 'none';
 
-    if (document.pointerLockElement === document.body && !inCar) {
-        const raycaster = new THREE.Raycaster();
-        raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-        const intersects = raycaster.intersectObjects(interactables);
+    if (document.pointerLockElement === document.body) {
+        let distToSpawnDoor = Math.hypot(camera.position.x - 0, camera.position.z - 118);
+        if (distToSpawnDoor < 6.0) {
+            ui.prompt.innerText = "E to Examine Biological Sphincter Door";
+            ui.prompt.style.display = 'block';
+        } else {
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+            const intersects = raycaster.intersectObjects(interactables);
 
-        if (intersects.length > 0 && intersects[0].distance < 4.5) {
-            let obj = intersects[0].object;
-            let type = obj.userData.type || (obj.parent ? obj.parent.userData.type : null);
-            let pText = "";
+            if (intersects.length > 0 && intersects[0].distance < 4.5) {
+                let obj = intersects[0].object;
+                let type = obj.userData.type || (obj.parent ? obj.parent.userData.type : null);
+                let pText = "";
 
-            if (type === 'key') pText = "Z to Pick Up Brass Key";
-            else if (type === 'door') {
-                if (obj.userData.locked) pText = hasBrassKey ? "Z to Unlock Door (Brass Key)" : "Door Locked (Requires Key)";
-                else pText = obj.userData.open ? "Z to Close Door" : "Z to Open Door";
-            }
-            else if (type === 'diary') pText = "Z to Read Journal Note";
-            else if (type === 'button' && !obj.userData.pressed) pText = "Z to Activate Sandstone Button";
-            else if (type === 'car') pText = "E to Drive Cruiser";
+                if (type === 'key') pText = "Z to Pick Up Brass Key";
+                else if (type === 'door') {
+                    if (obj.userData.locked) pText = hasBrassKey ? "Z to Unlock Door (Brass Key)" : "Door Locked (Requires Key)";
+                    else pText = obj.userData.open ? "Z to Close Door" : "Z to Open Door";
+                }
+                else if (type === 'diary') pText = "Z to Read Journal Note";
+                else if (type === 'button' && !obj.userData.pressed) pText = "Z to Activate Hormone Releaser";
 
-            if (pText) {
-                activeInteractable = obj;
-                ui.prompt.innerText = pText;
-                ui.prompt.style.display = 'block';
+                if (pText) {
+                    activeInteractable = obj;
+                    ui.prompt.innerText = pText;
+                    ui.prompt.style.display = 'block';
+                }
             }
         }
     }
