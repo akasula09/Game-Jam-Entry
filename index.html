@@ -61,29 +61,105 @@
         }
 
         #flash-text {
-            top: 30%;
+            top: 25%;
             left: 50%;
             transform: translateX(-50%);
             color: white;
-            font-size: 40px;
+            font-size: 36px;
             text-shadow: 3px 3px 0px #000;
             opacity: 0;
             transition: opacity 0.5s;
             display: block;
+            text-align: center;
         }
 
         #hint-text {
-            bottom: 10%;
+            bottom: 15%;
             left: 50%;
             transform: translateX(-50%);
             color: #aaa;
             font-size: 18px;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.7);
             padding: 10px 20px;
             border-radius: 5px;
             opacity: 0;
             transition: opacity 1s;
             display: block;
+            text-align: center;
+        }
+
+        /* 5-Slot Inventory Bar UI */
+        #inventory-bar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(0,0,0,0.85);
+            padding: 10px;
+            border: 2px solid #555;
+            border-radius: 8px;
+            z-index: 80;
+            pointer-events: none;
+        }
+
+        .inv-slot {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #444;
+            background: rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 11px;
+            text-align: center;
+            position: relative;
+        }
+
+        .inv-slot.active {
+            border-color: #ff3333;
+            box-shadow: 0 0 10px rgba(255,51,51,0.8);
+            background: rgba(255,51,51,0.15);
+        }
+
+        .inv-num {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 10px;
+            color: #aaa;
+        }
+
+        /* Barricade Health Bar */
+        #barricade-health-container {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 20px;
+            background: rgba(0,0,0,0.8);
+            border: 2px solid #880000;
+            display: none;
+            z-index: 90;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #barricade-health-bar {
+            width: 100%;
+            height: 100%;
+            background: #ff3333;
+            transition: width 0.2s;
+        }
+
+        #barricade-text {
+            color: #fff;
+            font-size: 12px;
+            margin-bottom: 2px;
         }
 
         #note-view {
@@ -99,16 +175,16 @@
 
         #note-view .paper {
             background: #f4f4f4;
-            padding: 60px;
+            padding: 50px;
             border-radius: 2px;
             box-shadow: 0 0 20px rgba(0,0,0,1);
-            max-width: 600px;
+            max-width: 550px;
             text-align: center;
         }
 
         #note-view p {
             color: #900;
-            font-size: 35px;
+            font-size: 28px;
             font-weight: bold;
             font-style: italic;
             margin: 0;
@@ -122,12 +198,12 @@
         }
 
         #dialog-box {
-            bottom: 5%;
+            bottom: 120px;
             left: 50%;
             transform: translateX(-50%);
             width: 80%;
             max-width: 700px;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             border: 2px solid #555;
             color: white;
             padding: 20px;
@@ -163,7 +239,6 @@
         }
         #input-view button:hover { background: #666; }
 
-        /* Updated Game Over & Level 2 Button Styling */
         #game-over {
             top: 0; left: 0; width: 100%; height: 100%;
             background: black;
@@ -198,18 +273,37 @@
             box-shadow: 0 0 25px rgba(255, 0, 0, 0.9);
         }
 
+        /* Detailed Start Screen Instructions */
         .click-to-start {
             position: absolute; top:0; left:0; width:100%; height:100%;
-            background: #000; color: white; display: flex; align-items: center; justify-content: center;
-            z-index: 200; font-size: 24px; cursor: pointer;
+            background: #050505; color: white; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 200; cursor: pointer; text-align: center; padding: 20px;
         }
+        .click-to-start h1 { font-size: 42px; color: #ff3333; margin-bottom: 10px; text-shadow: 0 0 10px #ff0000; }
+        .instructions-box {
+            background: rgba(255,255,255,0.05); border: 1px solid #444; padding: 20px; border-radius: 8px;
+            max-width: 600px; text-align: left; font-size: 15px; line-height: 1.6; color: #ddd; margin-bottom: 25px;
+        }
+        .instructions-box span { color: #ff9999; font-weight: bold; }
     </style>
-    <!-- Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <div id="start-screen" class="click-to-start">Click to Wake Up</div>
+    <div id="start-screen" class="click-to-start">
+        <h1>THE INEVITABLE</h1>
+        <div class="instructions-box">
+            <b>CONTROLS & HOW TO SURVIVE:</b><br>
+            • <span>W / A / S / D</span> - Move around<br>
+            • <span>MOUSE</span> - Look around<br>
+            • <span>SPACE</span> - Jump<br>
+            • <span>Z</span> - Interact / Read / Action<br>
+            • <span>1, 2, 3, 4, 5</span> - Select Inventory Item<br><br>
+            <b>OBJECTIVE:</b> Find a way to barricade yourself and uncover Smiler's hidden weakness before he catches you!
+        </div>
+        <p style="color: #aaa; font-size: 20px;">[ CLICK ANYWHERE TO START ]</p>
+    </div>
 
     <div id="lid-top"></div>
     <div id="lid-bottom"></div>
@@ -218,6 +312,21 @@
     <div id="interact-prompt" class="overlay"></div>
     <div id="flash-text" class="overlay">The house is locked.</div>
     <div id="hint-text" class="overlay"></div>
+
+    <!-- Inventory UI Bar -->
+    <div id="inventory-bar">
+        <div class="inv-slot active" id="slot-0"><span class="inv-num">1</span><span id="slot-0-name">Empty</span></div>
+        <div class="inv-slot" id="slot-1"><span class="inv-num">2</span><span id="slot-1-name">Empty</span></div>
+        <div class="inv-slot" id="slot-2"><span class="inv-num">3</span><span id="slot-2-name">Empty</span></div>
+        <div class="inv-slot" id="slot-3"><span class="inv-num">4</span><span id="slot-3-name">Empty</span></div>
+        <div class="inv-slot" id="slot-4"><span class="inv-num">5</span><span id="slot-4-name">Empty</span></div>
+    </div>
+
+    <!-- Barricade Health Bar -->
+    <div id="barricade-health-container">
+        <div id="barricade-text">BARRICADE INTEGRITY</div>
+        <div id="barricade-health-bar"></div>
+    </div>
 
     <div id="note-view" class="overlay">
         <div class="paper">
@@ -238,7 +347,7 @@
     </div>
 
     <div id="game-over" class="overlay">
-        <h1>GAME OVER.<br><br>YOU CANT ESCAPE HIM.<br><br>IT IS INEVITABLE.</h1>
+        <h1 id="game-over-title">GAME OVER.<br><br>YOU WERE CONSUMED BY SMILER.<br><br>WELCOME TO HIS BELLY.</h1>
         <button id="level2-btn">Awake in the Desert</button>
     </div>
 
@@ -251,25 +360,52 @@ const STATE = {
     NOTE1_READ: 3,
     FIND_NOTE2: 4,
     NOTE2_READ: 5,
-    SEEK_BOX: 6,
-    FIND_CROWBAR: 7,
-    BREAK_BOX: 8,
-    HUNT_SMILER: 9,
-    SMILER_TALK1: 10,
-    SMILER_TALK2: 11,
-    INPUT_Q: 12,
-    WAIT_Q: 13,
-    READ_A: 14,
-    SMILER_WALKS: 15,
-    SMILER_TALK3: 16,
-    CHASE: 17,
-    DEAD: 18
+    CELLAR_UNLOCKED: 6,
+    IN_CELLAR_FIRST: 7,
+    CHOP_TREE: 8,
+    SEEK_BOX: 9,
+    FIND_CROWBAR: 10,
+    BREAK_BOX: 11,
+    HUNT_SMILER: 12,
+    SMILER_TALK1: 13,
+    SMILER_TALK2: 14,
+    INPUT_Q: 15,
+    WAIT_Q: 16,
+    READ_A: 17,
+    COUNTDOWN: 18,
+    CHASE: 19,
+    DEAD: 20,
+    WIN: 21
 };
 
 let currentState = STATE.WAKING;
 let timeInState = 0;
 let hasKey = false;
 let hasCrowbar = false;
+let rugMoved = false;
+let trapdoorUnlocked = false;
+let barricaded = false;
+let barricadeHealth = 100;
+let countdownTimer = 15;
+let mirrorInteractableActive = false;
+
+// --- INVENTORY SYSTEM ---
+const inventory = ["Empty", "Empty", "Empty", "Empty", "Empty"];
+let activeSlot = 0;
+
+function setInventoryItem(slot, itemName) {
+    inventory[slot] = itemName;
+    document.getElementById(`slot-${slot}-name`).innerText = itemName;
+}
+
+function selectSlot(slotIdx) {
+    activeSlot = slotIdx;
+    for(let i=0; i<5; i++) {
+        const el = document.getElementById(`slot-${i}`);
+        if(i === slotIdx) el.classList.add('active');
+        else el.classList.remove('active');
+    }
+}
 
 // --- CONFIG & DOM ---
 const ui = {
@@ -285,9 +421,12 @@ const ui = {
     inputField: document.getElementById('q-input'),
     inputBtn: document.getElementById('q-btn'),
     gameOver: document.getElementById('game-over'),
+    gameOverTitle: document.getElementById('game-over-title'),
     lvl2Btn: document.getElementById('level2-btn'),
     lidTop: document.getElementById('lid-top'),
-    lidBottom: document.getElementById('lid-bottom')
+    lidBottom: document.getElementById('lid-bottom'),
+    barricadeContainer: document.getElementById('barricade-health-container'),
+    barricadeBar: document.getElementById('barricade-health-bar')
 };
 
 // Redirect Button Event Listener
@@ -318,21 +457,26 @@ scene.add(houseLight);
 
 // Floating Arrow Guidance Mesh
 const arrowGeo = new THREE.ConeGeometry(0.4, 1.2, 8);
-arrowGeo.rotateX(Math.PI); // Point down
+arrowGeo.rotateX(Math.PI);
 const arrowMat = new THREE.MeshBasicMaterial({ color: 0xff3333, wireframe: true });
 const guideArrow = new THREE.Mesh(arrowGeo, arrowMat);
 guideArrow.visible = false;
 scene.add(guideArrow);
 
-// --- CUSTOM CONTROLS & MOVEMENT ---
+// --- CONTROLS, JUMPING & MOVEMENT ---
 let pitch = 0;
 let yaw = 0;
 const PI_2 = Math.PI / 2;
-const keys = { w: false, a: false, s: false, d: false, z: false };
+const keys = { w: false, a: false, s: false, d: false, z: false, space: false };
 const velocity = new THREE.Vector3();
-const direction = new THREE.Vector3();
 let speed = 6.0;
 let smilerSpeed = 2.0;
+
+// Jump Variables
+let isGrounded = true;
+let verticalVelocity = 0;
+const gravity = -18.0;
+const jumpStrength = 7.0;
 
 document.addEventListener('mousemove', (e) => {
     if (document.pointerLockElement === document.body && currentState !== STATE.DEAD) {
@@ -353,9 +497,19 @@ document.addEventListener('keydown', (e) => {
     if(e.code === 'KeyA') keys.a = true;
     if(e.code === 'KeyS') keys.s = true;
     if(e.code === 'KeyD') keys.d = true;
+    if(e.code === 'Space') {
+        if(isGrounded && currentState !== STATE.DEAD) {
+            verticalVelocity = jumpStrength;
+            isGrounded = false;
+        }
+    }
     if(e.code === 'KeyZ') {
         if (!keys.z) handleZPress();
         keys.z = true;
+    }
+    if(e.code.startsWith('Digit')) {
+        const digit = parseInt(e.code.replace('Digit', '')) - 1;
+        if(digit >= 0 && digit < 5) selectSlot(digit);
     }
 });
 document.addEventListener('keyup', (e) => {
@@ -379,7 +533,7 @@ document.body.addEventListener('click', () => {
     }
 });
 
-// --- WORLD BUILDING ---
+// --- WORLD BUILDING & COLLIDERS ---
 const interactables = [];
 let solidWalls = [];
 
@@ -397,7 +551,7 @@ const ground = new THREE.Mesh(groundGeo, groundMat);
 ground.rotation.x = -Math.PI / 2;
 scene.add(ground);
 
-// Forest (Trees)
+// Forest Trees
 const trunkGeo = new THREE.CylinderGeometry(0.3, 0.4, 3);
 const trunkMat = new THREE.MeshLambertMaterial({ color: 0x3d2817 });
 const leavesGeo = new THREE.ConeGeometry(1.5, 4);
@@ -418,6 +572,19 @@ for (let i = 0; i < 150; i++) {
     addWallCollider(tx, tz, 0.8, 0.8);
 }
 
+// Weak Tree in front of house
+const weakTreeGroup = new THREE.Group();
+const weakTrunk = new THREE.Mesh(trunkGeo, new THREE.MeshLambertMaterial({ color: 0x5a3d28 }));
+weakTrunk.position.set(0, 1.5, 0);
+const weakLeaves = new THREE.Mesh(leavesGeo, leavesMat);
+weakLeaves.position.set(0, 4.5, 0);
+weakTreeGroup.add(weakTrunk);
+weakTreeGroup.add(weakLeaves);
+weakTreeGroup.position.set(2, 0, -6);
+scene.add(weakTreeGroup);
+weakTrunk.userData = { type: 'tree' };
+addWallCollider(2, -6, 1.0, 1.0);
+
 // Key & Key Post
 const postGeo = new THREE.CylinderGeometry(0.1, 0.1, 1.5);
 const postMesh = new THREE.Mesh(postGeo, trunkMat);
@@ -432,7 +599,7 @@ keyMesh.userData = { type: 'key' };
 scene.add(keyMesh);
 interactables.push(keyMesh);
 
-// House
+// House Setup
 const houseMat = new THREE.MeshLambertMaterial({ color: 0x444444 });
 const hwBack = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), houseMat);
 hwBack.position.set(0, 2, -20);
@@ -461,7 +628,7 @@ roof.position.set(0, 5.5, -15);
 roof.rotation.y = Math.PI/4;
 scene.add(roof);
 
-// Door
+// Door & Barricade Planks
 const doorPivot = new THREE.Group();
 doorPivot.position.set(-1.25, 0, -10);
 const doorGeo = new THREE.BoxGeometry(2.5, 3.8, 0.2);
@@ -474,12 +641,21 @@ let doorMoving = false;
 doorMesh.userData = { type: 'door' };
 interactables.push(doorMesh);
 let doorColliderIdx = solidWalls.length;
-addWallCollider(0, -10, 2.5, 0.5); 
+addWallCollider(0, -10, 2.5, 0.5);
+
+// Barricade Mesh (Planks across doorway)
+const barricadeMesh = new THREE.Group();
+for(let i=0; i<4; i++) {
+    const plank = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.4, 0.15), new THREE.MeshLambertMaterial({ color: 0x3d2817 }));
+    plank.position.set(0, 0.8 + i*0.8, -10);
+    plank.rotation.z = (i % 2 === 0 ? 1 : -1) * 0.08;
+    barricadeMesh.add(plank);
+}
+barricadeMesh.visible = false;
+scene.add(barricadeMesh);
 
 // Furniture
-const bedMat = new THREE.MeshLambertMaterial({ color: 0x223355 });
-const bedGeo = new THREE.BoxGeometry(3, 1, 5);
-const bed = new THREE.Mesh(bedGeo, bedMat);
+const bed = new THREE.Mesh(new THREE.BoxGeometry(3, 1, 5), new THREE.MeshLambertMaterial({ color: 0x223355 }));
 bed.position.set(-2.5, 0.5, -17);
 scene.add(bed); addWallCollider(-2.5, -17, 3, 5);
 
@@ -487,7 +663,7 @@ const table = new THREE.Mesh(new THREE.BoxGeometry(2, 1.2, 2), new THREE.MeshLam
 table.position.set(2.5, 0.6, -18);
 scene.add(table); addWallCollider(2.5, -18, 2, 2);
 
-// Notes (Two Halves)
+// Notes
 const noteGeo = new THREE.PlaneGeometry(0.4, 0.5);
 const noteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
@@ -500,29 +676,92 @@ interactables.push(note1);
 
 const note2 = new THREE.Mesh(noteGeo, noteMat);
 note2.rotation.x = -Math.PI / 2;
-note2.position.set(-2.5, 1.01, -18.5); // Placed visibly on top of the bed mattress
+note2.position.set(-2.5, 1.01, -18.5);
 note2.userData = { type: 'note2' };
 scene.add(note2);
 
-// Crowbar behind the house
-const crowbarGeo = new THREE.CylinderGeometry(0.03, 0.03, 1.2);
-const crowbarMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8 });
-const crowbarMesh = new THREE.Mesh(crowbarGeo, crowbarMat);
+// RUG & TRAPDOOR MECHANIC
+const rugGeo = new THREE.PlaneGeometry(2.5, 3.5);
+const rugMat = new THREE.MeshLambertMaterial({ color: 0x661111 });
+const rugMesh = new THREE.Mesh(rugGeo, rugMat);
+rugMesh.rotation.x = -Math.PI / 2;
+rugMesh.position.set(0, 0.01, -14);
+rugMesh.userData = { type: 'rug' };
+scene.add(rugMesh);
+
+const trapdoorGeo = new THREE.BoxGeometry(2, 0.1, 2);
+const trapdoorMat = new THREE.MeshLambertMaterial({ color: 0x221105 });
+const trapdoorMesh = new THREE.Mesh(trapdoorGeo, trapdoorMat);
+trapdoorMesh.position.set(0, 0.005, -14);
+trapdoorMesh.userData = { type: 'trapdoor' };
+scene.add(trapdoorMesh);
+
+// CELLAR ENVIRONMENT (Underneath house)
+const cellarGroup = new THREE.Group();
+cellarGroup.position.set(0, -6, -14);
+
+const cellarFloor = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.MeshLambertMaterial({ color: 0x111111 }));
+cellarFloor.rotation.x = -Math.PI / 2;
+cellarGroup.add(cellarFloor);
+
+const cellarWallMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
+const cwBack = new THREE.Mesh(new THREE.BoxGeometry(8, 4, 0.2), cellarWallMat); cwBack.position.set(0, 2, -4); cellarGroup.add(cwBack);
+const cwLeft = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 8), cellarWallMat); cwLeft.position.set(-4, 2, 0); cellarGroup.add(cwLeft);
+const cwRight = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 8), cellarWallMat); cwRight.position.set(4, 2, 0); cellarGroup.add(cwRight);
+
+// Ladder from house to cellar
+const ladderGroup = new THREE.Group();
+for(let i=0; i<12; i++) {
+    const rung = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.08), new THREE.MeshBasicMaterial({ color: 0x8b5a2b }));
+    rung.position.set(0, i * 0.5 - 5.5, -0.9);
+    ladderGroup.add(rung);
+}
+ladderGroup.position.set(0, 0, -14);
+scene.add(ladderGroup);
+
+// Axe in Cellar
+const axeMesh = new THREE.Group();
+const axeHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.2), new THREE.MeshLambertMaterial({ color: 0x8b5a2b }));
+const axeBlade = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.05), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9 }));
+axeBlade.position.set(0.15, 0.4, 0);
+axeMesh.add(axeHandle); axeMesh.add(axeBlade);
+axeMesh.position.set(-2, -5.4, -16);
+axeMesh.userData = { type: 'axe' };
+cellarGroup.add(axeMesh);
+
+// Mirror & Note in Cellar
+const mirrorFrame = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.0, 0.1), new THREE.MeshStandardMaterial({ color: 0xb8860b }));
+const mirrorGlass = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.8), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 1.0, roughness: 0.1 }));
+mirrorGlass.position.z = 0.06;
+const mirrorGroup = new THREE.Group();
+mirrorGroup.add(mirrorFrame); mirrorGroup.add(mirrorGlass);
+mirrorGroup.position.set(2.5, 1.2, -17.5);
+mirrorGroup.userData = { type: 'mirror' };
+scene.add(mirrorGroup);
+
+const mirrorNote = new THREE.Mesh(noteGeo, noteMat);
+mirrorNote.rotation.x = -Math.PI / 2;
+mirrorNote.position.set(2.5, 0.01, -16.5);
+mirrorNote.userData = { type: 'mirrornote' };
+scene.add(mirrorNote);
+
+scene.add(cellarGroup);
+
+// Crowbar behind house
+const crowbarMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.2), new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8 }));
 crowbarMesh.rotation.z = Math.PI / 3;
 crowbarMesh.position.set(0, 0.2, -22);
 crowbarMesh.userData = { type: 'crowbar' };
 scene.add(crowbarMesh);
 
-// Box outside
-const boxGeo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
-const boxMat = new THREE.MeshLambertMaterial({ color: 0x8b5a2b });
-const mysteryBox = new THREE.Mesh(boxGeo, boxMat);
+// Mystery Box outside
+const mysteryBox = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 1.5), new THREE.MeshLambertMaterial({ color: 0x8b5a2b }));
 mysteryBox.position.set(10, 0.75, -8);
 scene.add(mysteryBox);
 mysteryBox.userData = { type: 'box' };
 addWallCollider(10, -8, 1.5, 1.5);
 
-// Smiler Generation
+// Smiler Setup
 function createFaceTexture(scary) {
     const cvs = document.createElement('canvas');
     cvs.width = 512; cvs.height = 512;
@@ -546,11 +785,6 @@ function createFaceTexture(scary) {
         
         ctx.lineWidth = 20; ctx.strokeStyle = '#000';
         ctx.beginPath(); ctx.moveTo(100, 350); ctx.lineTo(256, 420); ctx.lineTo(412, 350); ctx.stroke();
-        
-        ctx.fillStyle = '#500';
-        for(let i=0; i<10; i++) {
-            ctx.beginPath(); ctx.arc(Math.random()*512, Math.random()*512, Math.random()*20, 0, Math.PI*2); ctx.fill();
-        }
     }
     return new THREE.CanvasTexture(cvs);
 }
@@ -558,9 +792,7 @@ function createFaceTexture(scary) {
 let texNormal = createFaceTexture(false);
 let texScary = createFaceTexture(true);
 
-const smilerGeo = new THREE.SphereGeometry(0.7, 32, 32);
-const smilerMat = new THREE.MeshBasicMaterial({ map: texNormal });
-const smiler = new THREE.Mesh(smilerGeo, smilerMat);
+const smiler = new THREE.Mesh(new THREE.SphereGeometry(0.7, 32, 32), new THREE.MeshBasicMaterial({ map: texNormal }));
 smiler.position.copy(mysteryBox.position);
 smiler.visible = false;
 scene.add(smiler);
@@ -568,7 +800,7 @@ smiler.userData = { type: 'smiler' };
 
 const boxPieces = [];
 
-// --- LOGIC / FLOW ---
+// --- GAME LOGIC / FLOW ---
 let playerHeight = 0.2;
 camera.position.set(0, playerHeight, 0);
 
@@ -604,7 +836,7 @@ function flashText(msg) {
     setTimeout(() => {
         ui.flash.style.opacity = 0;
         setTimeout(()=> ui.flash.style.display = 'none', 500);
-    }, 2000);
+    }, 2500);
 }
 
 function showDialog(text) {
@@ -616,23 +848,23 @@ function hideDialog() {
 }
 
 function handleZPress() {
-    if(currentState === STATE.DEAD) return;
+    if(currentState === STATE.DEAD || currentState === STATE.WIN) return;
 
     if(currentState === STATE.NOTE1_READ) {
         ui.note.style.display = 'none';
         currentState = STATE.FIND_NOTE2;
         timeInState = 0;
-        flashText("Part of the note is torn off...");
-        interactables.push(note2);
+        flashText("Check under the rug...");
+        interactables.push(rugMesh);
         return;
     }
 
     if(currentState === STATE.NOTE2_READ) {
         ui.note.style.display = 'none';
-        currentState = STATE.SEEK_BOX;
+        currentState = STATE.CELLAR_UNLOCKED;
         timeInState = 0;
-        flashText("Check the wooden box outside.");
-        interactables.push(mysteryBox);
+        flashText("The house key works on the trapdoor too.");
+        interactables.push(trapdoorMesh);
         return;
     }
 
@@ -653,35 +885,44 @@ function handleZPress() {
 
     if(currentState === STATE.READ_A) {
         hideDialog();
-        currentState = STATE.SMILER_WALKS;
-        return;
-    }
-    
-    if(currentState === STATE.SMILER_TALK3) {
-        hideDialog();
         smiler.material.map = texScary;
-        smiler.scale.set(1.5, 1.5, 1.5);
-        smilerSpeed = 9.0;
-        currentState = STATE.CHASE;
-        flashText("RUN.");
+        smiler.scale.set(1.4, 1.4, 1.4);
+        currentState = STATE.COUNTDOWN;
+        timeInState = 0;
+        countdownTimer = 15;
+        flashText("RUN! Smiler is counting down!");
         return;
     }
 
-    // Interaction Raycast Triggers
+    // Interaction Raycasts
     if(activeInteractable) {
         let type = activeInteractable.userData.type;
 
         if(type === 'key' && currentState === STATE.FIND_KEY) {
             hasKey = true;
+            setInventoryItem(0, "House Key");
             scene.remove(keyMesh);
             interactables.splice(interactables.indexOf(keyMesh), 1);
             currentState = STATE.ENTER_HOUSE;
             timeInState = 0;
-            flashText("Got the key. Unlock the door.");
+            flashText("Got House Key.");
         }
         else if(type === 'door' && !doorMoving) {
-            if(!doorOpen && !hasKey) {
+            if(barricaded) {
+                flashText("The door is barricaded shut!");
+                return;
+            }
+            if(!doorOpen && inventory[activeSlot] !== "House Key" && !hasKey) {
                 flashText("It's locked tight.");
+                return;
+            }
+            // Barricade action using planks
+            if(inventory[activeSlot] === "Wooden Planks" && !barricaded) {
+                barricaded = true;
+                barricadeMesh.visible = true;
+                setInventoryItem(activeSlot, "Empty");
+                ui.barricadeContainer.style.display = 'flex';
+                flashText("Door Barricaded! High integrity!");
                 return;
             }
             doorMoving = true;
@@ -689,11 +930,9 @@ function handleZPress() {
             let step = doorOpen ? -0.05 : 0.05;
             
             if(!doorOpen) {
-                solidWalls[doorColliderIdx].minX = 0; 
-                solidWalls[doorColliderIdx].maxX = 0;
+                solidWalls[doorColliderIdx].minX = 0; solidWalls[doorColliderIdx].maxX = 0;
             } else {
-                solidWalls[doorColliderIdx].minX = 0;
-                solidWalls[doorColliderIdx].maxX = 2.5;
+                solidWalls[doorColliderIdx].minX = 0; solidWalls[doorColliderIdx].maxX = 2.5;
             }
 
             let anim = setInterval(() => {
@@ -707,18 +946,56 @@ function handleZPress() {
             }, 16);
         }
         else if (type === 'note1' && currentState === STATE.ENTER_HOUSE) {
-            ui.noteTxt.innerText = "They're coming...";
+            ui.noteTxt.innerText = "They're coming... Check under the rug.";
             ui.note.style.display = 'flex';
             currentState = STATE.NOTE1_READ;
         }
+        else if (type === 'rug' && currentState === STATE.FIND_NOTE2) {
+            rugMesh.position.x = 2.0; // Slide rug away
+            rugMoved = true;
+            currentState = STATE.FIND_NOTE2;
+            interactables.push(note2);
+            flashText("Uncovered torn note!");
+        }
         else if (type === 'note2' && currentState === STATE.FIND_NOTE2) {
-            ui.noteTxt.innerText = "...I need to run. Check the box outside.";
+            ui.noteTxt.innerText = "...The house key works on the trapdoor too.";
             ui.note.style.display = 'flex';
             currentState = STATE.NOTE2_READ;
         }
+        else if (type === 'trapdoor' && currentState === STATE.CELLAR_UNLOCKED) {
+            if(inventory[activeSlot] === "House Key" || hasKey) {
+                trapdoorUnlocked = true;
+                flashText("Unlocked trapdoor!");
+                currentState = STATE.IN_CELLAR_FIRST;
+                timeInState = 0;
+                interactables.push(axeMesh);
+            } else {
+                flashText("Equip the House Key to unlock.");
+            }
+        }
+        else if (type === 'axe' && currentState === STATE.IN_CELLAR_FIRST) {
+            setInventoryItem(1, "Axe");
+            cellarGroup.remove(axeMesh);
+            currentState = STATE.CHOP_TREE;
+            timeInState = 0;
+            flashText("Acquired Axe! Chop down the weak tree in front of the house.");
+            interactables.push(weakTrunk);
+        }
+        else if (type === 'tree' && currentState === STATE.CHOP_TREE) {
+            if(inventory[activeSlot] === "Axe") {
+                scene.remove(weakTreeGroup);
+                setInventoryItem(2, "Wooden Planks");
+                currentState = STATE.SEEK_BOX;
+                timeInState = 0;
+                flashText("Got Wooden Planks! Go search the box outside.");
+                interactables.push(mysteryBox);
+            } else {
+                flashText("Equip the Axe (Slot 2) to chop this tree.");
+            }
+        }
         else if (type === 'box' && currentState === STATE.SEEK_BOX) {
             if(!hasCrowbar) {
-                flashText("It's nailed shut! I need a tool.");
+                flashText("It's nailed shut! Find a crowbar behind the house.");
                 currentState = STATE.FIND_CROWBAR;
                 timeInState = 0;
                 interactables.push(crowbarMesh);
@@ -726,26 +1003,22 @@ function handleZPress() {
         }
         else if (type === 'crowbar' && currentState === STATE.FIND_CROWBAR) {
             hasCrowbar = true;
+            setInventoryItem(3, "Crowbar");
             scene.remove(crowbarMesh);
-            interactables.splice(interactables.indexOf(crowbarMesh), 1);
             currentState = STATE.BREAK_BOX;
             timeInState = 0;
-            flashText("Got crowbar! Go smash the box.");
+            flashText("Got Crowbar! Go smash the wooden box.");
         }
         else if (type === 'box' && currentState === STATE.BREAK_BOX) {
-            // Smash Box
             mysteryBox.visible = false;
             for(let i=0; i<5; i++){
-                let p = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,0.5), boxMat);
+                let p = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,0.5), new THREE.MeshLambertMaterial({ color: 0x8b5a2b }));
                 p.position.copy(mysteryBox.position);
                 p.userData.vel = new THREE.Vector3((Math.random()-0.5)*5, Math.random()*5, (Math.random()-0.5)*5);
                 scene.add(p);
                 boxPieces.push(p);
             }
-            solidWalls = solidWalls.filter(w => !(w.minX == 10 - 0.75 && w.maxZ == -8 + 0.75));
-            interactables.splice(interactables.indexOf(mysteryBox), 1);
             
-            // Smiler vanishes into dark forest
             smiler.position.set(28, 1.2, -35); 
             smiler.visible = true;
             interactables.push(smiler);
@@ -757,12 +1030,34 @@ function handleZPress() {
         else if (type === 'smiler' && currentState === STATE.HUNT_SMILER) {
             currentState = STATE.SMILER_TALK1;
             timeInState = 0;
-            showDialog("Hi! I'm smiler! I know a lot.");
+            showDialog("Hi! I'm Smiler! I know everything.");
+        }
+        else if (type === 'mirrornote') {
+            ui.noteTxt.innerText = "The one with the yellow face cannot look at themselves without getting destroyed.";
+            ui.note.style.display = 'flex';
+        }
+        else if (type === 'mirror') {
+            if(mirrorInteractableActive) {
+                setInventoryItem(4, "Mirror");
+                scene.remove(mirrorGroup);
+                flashText("Acquired Mirror! Hold it up to Smiler when he attacks!");
+            }
         }
     }
 }
 
-// Groq API Logic
+// Ladder Climbing Interaction
+function handleLadderClimb() {
+    if(camera.position.z < -13 && camera.position.z > -15 && Math.abs(camera.position.x) < 1.5) {
+        if(camera.position.y > 0) {
+            camera.position.set(0, -4.3, -14); // Down to cellar
+        } else {
+            camera.position.set(0, 1.7, -13); // Up to cabin
+        }
+    }
+}
+
+// Groq Question Logic
 ui.inputBtn.addEventListener('click', async () => {
     let q = ui.inputField.value.trim();
     if(!q) q = "What are you?";
@@ -787,15 +1082,85 @@ ui.inputBtn.addEventListener('click', async () => {
     currentState = STATE.READ_A;
 });
 
-ui.inputField.addEventListener('keydown', (e) => {
-    if(e.code === 'Enter') ui.inputBtn.click();
-});
+// --- PATHFINDING & COLLISION FOR SMILER ---
+function moveSmilerWithPathfinding(dt) {
+    let targetPos = camera.position.clone();
+    let dir = new THREE.Vector3().subVectors(targetPos, smiler.position);
+    dir.y = 0;
+    dir.normalize();
 
-// --- MAIN LOOP ---
-const raycaster = new THREE.Raycaster();
-const screenCenter = new THREE.Vector2(0, 0);
-let activeInteractable = null;
-let lastTime = performance.now();
+    // Check collision along Smiler's path
+    let nextX = smiler.position.x + dir.x * smilerSpeed * dt;
+    let nextZ = smiler.position.z + dir.z * smilerSpeed * dt;
+    
+    if(!checkCollisions(new THREE.Vector3(nextX, smiler.position.y, smiler.position.z))) {
+        smiler.position.x = nextX;
+    }
+    if(!checkCollisions(new THREE.Vector3(smiler.position.x, smiler.position.y, nextZ))) {
+        smiler.position.z = nextZ;
+    }
+}
+
+// --- UPDATE HINTS & GUIDANCE ---
+function updateGuidanceAndHints(dt) {
+    if(currentState <= STATE.WAKING || currentState >= STATE.CHASE) {
+        ui.hint.style.opacity = 0;
+        guideArrow.visible = false;
+        return;
+    }
+
+    timeInState += dt;
+    let targetObj = null;
+    let hintMsg = "";
+
+    if (currentState === STATE.FIND_KEY) {
+        hintMsg = "Search the edge of the forest for a key on a post.";
+        targetObj = keyMesh;
+    } else if (currentState === STATE.ENTER_HOUSE) {
+        hintMsg = "Use the key to unlock the house door.";
+        targetObj = doorMesh;
+    } else if (currentState === STATE.FIND_NOTE2) {
+        hintMsg = "Move the rug on the floor inside the cabin.";
+        targetObj = rugMesh;
+    } else if (currentState === STATE.CELLAR_UNLOCKED) {
+        hintMsg = "Equip your House Key (Slot 1) and unlock the trapdoor.";
+        targetObj = trapdoorMesh;
+    } else if (currentState === STATE.IN_CELLAR_FIRST) {
+        hintMsg = "Descend the ladder into the cellar and grab the Axe.";
+        targetObj = axeMesh;
+    } else if (currentState === STATE.CHOP_TREE) {
+        hintMsg = "Equip the Axe (Slot 2) and chop the weak tree in front of the house.";
+        targetObj = weakTrunk;
+    } else if (currentState === STATE.SEEK_BOX) {
+        hintMsg = "Check the wooden box outside on the side of the house.";
+        targetObj = mysteryBox;
+    } else if (currentState === STATE.FIND_CROWBAR) {
+        hintMsg = "Check behind the house to find a crowbar.";
+        targetObj = crowbarMesh;
+    } else if (currentState === STATE.BREAK_BOX) {
+        hintMsg = "Smash the wooden box using your Crowbar (Slot 4).";
+        targetObj = mysteryBox;
+    } else if (currentState === STATE.HUNT_SMILER) {
+        hintMsg = "Locate the glowing yellow face lurking in the dark forest.";
+        targetObj = smiler;
+    }
+
+    if (timeInState > 10 && hintMsg) {
+        ui.hint.innerText = hintMsg;
+        ui.hint.style.opacity = 1;
+    } else {
+        ui.hint.style.opacity = 0;
+    }
+
+    if (timeInState > 25 && targetObj) {
+        let targetPos = new THREE.Vector3();
+        targetObj.getWorldPosition(targetPos);
+        guideArrow.position.set(targetPos.x, targetPos.y + 2.2 + Math.sin(performance.now() * 0.005) * 0.2, targetPos.z);
+        guideArrow.visible = true;
+    } else {
+        guideArrow.visible = false;
+    }
+}
 
 function checkCollisions(newPos) {
     let r = 0.5;
@@ -808,66 +1173,11 @@ function checkCollisions(newPos) {
     return false;
 }
 
-function updateGuidanceAndHints(dt) {
-    if(currentState <= STATE.WAKING || currentState >= STATE.CHASE) {
-        ui.hint.style.opacity = 0;
-        guideArrow.visible = false;
-        return;
-    }
-
-    timeInState += dt;
-    let targetObj = null;
-    let hintMsg = "";
-
-    // Specific Hints and Arrow Targets
-    if (currentState === STATE.FIND_KEY) {
-        hintMsg = "Search the edge of the forest for a key on a wooden post.";
-        targetObj = keyMesh;
-    } else if (currentState === STATE.ENTER_HOUSE) {
-        hintMsg = "Use the key to unlock the house door ahead.";
-        targetObj = doorMesh;
-    } else if (currentState === STATE.FIND_NOTE2) {
-        hintMsg = "Search in the dark corners under the furniture for the rest of the note.";
-        targetObj = note2;
-    } else if (currentState === STATE.SEEK_BOX) {
-        hintMsg = "Go outside and check the wooden box on the side.";
-        targetObj = mysteryBox;
-    } else if (currentState === STATE.FIND_CROWBAR) {
-        hintMsg = "Check behind the house to find a tool to pry open the box.";
-        targetObj = crowbarMesh;
-    } else if (currentState === STATE.BREAK_BOX) {
-        hintMsg = "Break the wooden box using the crowbar.";
-        targetObj = mysteryBox;
-    } else if (currentState === STATE.HUNT_SMILER) {
-        hintMsg = "Locate the glowing yellow face lurking deep in the dark forest.";
-        targetObj = smiler;
-    }
-
-    // Step 1: Text Hint appears after 10s
-    if (timeInState > 10 && hintMsg) {
-        ui.hint.innerText = hintMsg;
-        ui.hint.style.opacity = 1;
-        ui.hint.style.display = 'block';
-    } else {
-        ui.hint.style.opacity = 0;
-    }
-
-    // Step 2: 3D Guidance Arrow appears 15 SECONDS LATER (timeInState > 25s)
-    if (timeInState > 25 && targetObj) {
-        let targetPos = new THREE.Vector3();
-        targetObj.getWorldPosition(targetPos);
-        
-        let dist = camera.position.distanceTo(targetPos);
-        if (dist > 3.5) { // Show arrow until player gets close
-            guideArrow.position.set(targetPos.x, targetPos.y + 2.2 + Math.sin(performance.now() * 0.005) * 0.2, targetPos.z);
-            guideArrow.visible = true;
-        } else {
-            guideArrow.visible = false;
-        }
-    } else {
-        guideArrow.visible = false;
-    }
-}
+// --- MAIN GAME LOOP ---
+const raycaster = new THREE.Raycaster();
+const screenCenter = new THREE.Vector2(0, 0);
+let activeInteractable = null;
+let lastTime = performance.now();
 
 function animate() {
     requestAnimationFrame(animate);
@@ -877,11 +1187,22 @@ function animate() {
 
     updateGuidanceAndHints(dt);
 
+    // Physics & Jumping
+    if(!isGrounded) {
+        verticalVelocity += gravity * dt;
+        camera.position.y += verticalVelocity * dt;
+        let groundY = (camera.position.y < -3) ? -4.3 : playerHeight;
+        if(camera.position.y <= groundY) {
+            camera.position.y = groundY;
+            verticalVelocity = 0;
+            isGrounded = true;
+        }
+    }
+
     // Player Movement
-    if (document.pointerLockElement === document.body && currentState !== STATE.DEAD) {
-        direction.z = Number(keys.w) - Number(keys.s);
-        direction.x = Number(keys.d) - Number(keys.a);
-        direction.normalize();
+    if (document.pointerLockElement === document.body && currentState !== STATE.DEAD && currentState !== STATE.WIN) {
+        let dirZ = Number(keys.w) - Number(keys.s);
+        let dirX = Number(keys.d) - Number(keys.a);
 
         const camDir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
         camDir.y = 0; camDir.normalize();
@@ -889,109 +1210,129 @@ function animate() {
         camRight.y = 0; camRight.normalize();
 
         const moveVec = new THREE.Vector3();
-        moveVec.addScaledVector(camDir, direction.z);
-        moveVec.addScaledVector(camRight, direction.x);
-        
-        let targetSpeed = (keys.w || keys.a || keys.s || keys.d) ? speed : 0;
+        moveVec.addScaledVector(camDir, dirZ);
+        moveVec.addScaledVector(camRight, dirX);
+        moveVec.normalize();
+
         let oldX = camera.position.x;
         let oldZ = camera.position.z;
         
-        let nextX = oldX + moveVec.x * targetSpeed * dt;
-        if(!checkCollisions(new THREE.Vector3(nextX, camera.position.y, oldZ))) {
-            camera.position.x = nextX;
-        }
+        let nextX = oldX + moveVec.x * speed * dt;
+        if(!checkCollisions(new THREE.Vector3(nextX, camera.position.y, oldZ))) camera.position.x = nextX;
         
-        let nextZ = oldZ + moveVec.z * targetSpeed * dt;
-        if(!checkCollisions(new THREE.Vector3(camera.position.x, camera.position.y, nextZ))) {
-            camera.position.z = nextZ;
-        }
-        
-        if (targetSpeed > 0) {
-            camera.position.y = playerHeight + Math.sin(now * 0.01) * 0.05;
-        } else {
-            camera.position.y = playerHeight;
-        }
+        let nextZ = oldZ + moveVec.z * speed * dt;
+        if(!checkCollisions(new THREE.Vector3(camera.position.x, camera.position.y, nextZ))) camera.position.z = nextZ;
     }
 
-    // Interaction Raycast
+    // Raycast Interaction
     activeInteractable = null;
     ui.prompt.style.display = 'none';
-    if(currentState !== STATE.DEAD && currentState !== STATE.INPUT_Q && currentState !== STATE.NOTE1_READ && currentState !== STATE.NOTE2_READ) {
+    if(currentState !== STATE.DEAD && currentState !== STATE.INPUT_Q) {
         raycaster.setFromCamera(screenCenter, camera);
         const intersects = raycaster.intersectObjects(interactables);
         if (intersects.length > 0 && intersects[0].distance < 4) {
             let obj = intersects[0].object;
             let type = obj.userData.type;
-            
             let show = false;
             let pText = "";
             
             if(type === 'key' && currentState === STATE.FIND_KEY) { show = true; pText = "Z to pick up key"; }
-            else if(type === 'door') { show = true; pText = doorOpen ? "Z to close" : "Z to open"; }
+            else if(type === 'door') { show = true; pText = doorOpen ? "Z to close door" : "Z to open door"; }
             else if(type === 'note1' && currentState === STATE.ENTER_HOUSE) { show = true; pText = "Z to read note"; }
+            else if(type === 'rug' && currentState === STATE.FIND_NOTE2 && !rugMoved) { show = true; pText = "Z to move rug"; }
             else if(type === 'note2' && currentState === STATE.FIND_NOTE2) { show = true; pText = "Z to read torn note"; }
+            else if(type === 'trapdoor' && currentState === STATE.CELLAR_UNLOCKED) { show = true; pText = "Z to unlock trapdoor"; }
+            else if(type === 'axe' && currentState === STATE.IN_CELLAR_FIRST) { show = true; pText = "Z to pick up Axe"; }
+            else if(type === 'tree' && currentState === STATE.CHOP_TREE) { show = true; pText = "Z to chop tree with Axe"; }
             else if(type === 'box' && (currentState === STATE.SEEK_BOX || currentState === STATE.BREAK_BOX)) { 
-                show = true; 
-                pText = hasCrowbar ? "Z to smash box" : "Z to inspect box"; 
+                show = true; pText = hasCrowbar ? "Z to smash box with crowbar" : "Z to inspect box"; 
             }
             else if(type === 'crowbar' && currentState === STATE.FIND_CROWBAR) { show = true; pText = "Z to take crowbar"; }
             else if(type === 'smiler' && currentState === STATE.HUNT_SMILER) { show = true; pText = "Z to talk"; }
-            
+            else if(type === 'mirrornote') { show = true; pText = "Z to read note"; }
+            else if(type === 'mirror' && mirrorInteractableActive) { show = true; pText = "Z to pick up Mirror"; }
+
             if(show) {
                 activeInteractable = obj;
                 ui.prompt.innerText = pText;
                 ui.prompt.style.display = 'block';
             }
         }
-    }
 
-    // Box pieces physics
-    for(let i=boxPieces.length-1; i>=0; i--){
-        let p = boxPieces[i];
-        p.position.addScaledVector(p.userData.vel, dt);
-        p.userData.vel.y -= 9.8 * dt;
-        p.rotation.x += dt; p.rotation.y += dt;
-        if(p.position.y < 0) {
-            scene.remove(p);
-            boxPieces.splice(i,1);
+        // Ladder Climb Prompt
+        if(camera.position.z < -13 && camera.position.z > -15 && Math.abs(camera.position.x) < 1.5) {
+            ui.prompt.innerText = "Z to climb ladder";
+            ui.prompt.style.display = 'block';
         }
     }
 
-    // Smiler AI Logic
-    if(currentState === STATE.SMILER_WALKS) {
-        let targetPos = new THREE.Vector3(-2.5, 1.5, -17);
-        let dist = smiler.position.distanceTo(targetPos);
-        if(dist > 0.1) {
-            smiler.position.lerp(targetPos, dt * smilerSpeed);
-            smiler.lookAt(camera.position);
-        } else {
-            smiler.position.copy(targetPos);
-            currentState = STATE.SMILER_TALK3;
-            showDialog("Oh. You've read my whole note. Well.. guess I have to chase you!");
+    // --- SMILER COUNTDOWN & SIEGE PHASES ---
+    if(currentState === STATE.COUNTDOWN) {
+        countdownTimer -= dt;
+        flashText(`SMILER IS COMING IN: ${Math.ceil(countdownTimer)}`);
+        if(countdownTimer <= 0) {
+            currentState = STATE.CHASE;
+            smilerSpeed = 8.5; // Fast chase speed
+            flashText("HE IS HUNTING YOU! RUN OR HIDE!");
+            mirrorInteractableActive = true;
+            interactables.push(mirrorGroup);
         }
     }
-    
+
     if(currentState === STATE.CHASE) {
         smiler.lookAt(camera.position);
-        let dir = new THREE.Vector3().subVectors(camera.position, smiler.position);
-        dir.y = 0; dir.normalize();
-        smiler.position.addScaledVector(dir, smilerSpeed * dt);
-        
-        let distToPlayer = smiler.position.distanceTo(camera.position);
-        if(distToPlayer < 1.5) {
-            // CAUGHT - GAME OVER & SHOW LEVEL 2 BUTTON
-            currentState = STATE.DEAD;
-            ui.gameOver.style.display = 'flex';
-            document.exitPointerLock();
+
+        // If door is barricaded, Smiler must break through first (30s)
+        if(barricaded && barricadeHealth > 0) {
+            smiler.position.set(0, 1.2, -8.5); // Smiler attacks outside front door
+            barricadeHealth -= (100 / 30) * dt; // Decrements over 30s
+            ui.barricadeBar.style.width = `${Math.max(0, barricadeHealth)}%`;
+
+            if(barricadeHealth <= 0) {
+                barricaded = false;
+                barricadeMesh.visible = false;
+                ui.barricadeContainer.style.display = 'none';
+                flashText("THE BARRICADE BROKE!");
+            }
+        } else {
+            // Pathfind directly to player
+            moveSmilerWithPathfinding(dt);
+
+            let dist = smiler.position.distanceTo(camera.position);
+
+            // MIRROR DEFEAT CONDITION
+            if(inventory[activeSlot] === "Mirror" && dist < 4) {
+                // Player holding mirror directly at Smiler defeats him!
+                currentState = STATE.WIN;
+                flashText("SMILER LOOKED INTO THE MIRROR AND SHATTERED!");
+                scene.remove(smiler);
+                setTimeout(() => {
+                    ui.gameOverTitle.innerText = "YOU SURVIVED LEVEL 1!\n\nSMILER WAS DESTROYED BY HIS OWN REFLECTION.";
+                    ui.gameOver.style.display = 'flex';
+                    document.exitPointerLock();
+                }, 2000);
+            }
+            // PLAYER CAUGHT CONDITION
+            else if(dist < 1.5) {
+                currentState = STATE.DEAD;
+                ui.gameOverTitle.innerText = "GAME OVER.\n\nYOU WERE CONSUMED BY SMILER.\n\nWELCOME TO HIS BELLY.";
+                ui.gameOver.style.display = 'flex';
+                document.exitPointerLock();
+            }
         }
-    } else if (smiler.visible && currentState < STATE.SMILER_WALKS) {
-        smiler.lookAt(camera.position);
     }
 
     renderer.render(scene, camera);
 }
 
-// Start loop
+// Ladder action listener wrapper
+function handleZPressWrapper() {
+    if(camera.position.z < -13 && camera.position.z > -15 && Math.abs(camera.position.x) < 1.5) {
+        handleLadderClimb();
+    }
+}
+document.addEventListener('keydown', (e) => { if(e.code === 'KeyZ') handleZPressWrapper(); });
+
 animate();
 </script>
 </body>
