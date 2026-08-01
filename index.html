@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Mysterious Forest</title>
+    <title>The Inevitable</title>
     <style>
         body, html {
             margin: 0;
@@ -22,18 +22,6 @@
             height: 100%;
         }
 
-        /* Eye Drooping Effect */
-        #lid-top, #lid-bottom {
-            position: absolute;
-            width: 100%;
-            height: 50%;
-            background: #000;
-            z-index: 100;
-            transition: height 1.5s cubic-bezier(0.25, 0.1, 0.25, 1);
-        }
-        #lid-top { top: 0; }
-        #lid-bottom { bottom: 0; }
-
         /* UI Overlays */
         .overlay {
             position: absolute;
@@ -46,7 +34,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.7);
             font-size: 20px;
             display: block;
         }
@@ -58,7 +46,7 @@
             color: white;
             font-size: 22px;
             text-shadow: 2px 2px 4px #000;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
             padding: 4px 12px;
             border-radius: 4px;
         }
@@ -80,7 +68,7 @@
             bottom: 15%;
             left: 50%;
             transform: translateX(-50%);
-            color: #aaa;
+            color: #ddd;
             font-size: 18px;
             background: rgba(0,0,0,0.8);
             padding: 10px 20px;
@@ -101,7 +89,7 @@
             gap: 10px;
             background: rgba(0,0,0,0.85);
             padding: 10px;
-            border: 2px solid #555;
+            border: 2px solid #666;
             border-radius: 8px;
             z-index: 80;
             pointer-events: none;
@@ -110,7 +98,7 @@
         .inv-slot {
             width: 60px;
             height: 60px;
-            border: 2px solid #444;
+            border: 2px solid #555;
             background: rgba(255,255,255,0.05);
             display: flex;
             flex-direction: column;
@@ -207,7 +195,7 @@
             width: 80%;
             max-width: 700px;
             background: rgba(0, 0, 0, 0.9);
-            border: 2px solid #555;
+            border: 2px solid #666;
             color: white;
             padding: 20px;
             font-size: 20px;
@@ -278,13 +266,13 @@
 
         .click-to-start {
             position: absolute; top:0; left:0; width:100%; height:100%;
-            background: #050505; color: white; display: flex; flex-direction: column;
+            background: #0d0d0d; color: white; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
             z-index: 200; cursor: pointer; text-align: center; padding: 20px;
         }
         .click-to-start h1 { font-size: 42px; color: #ff3333; margin-bottom: 10px; text-shadow: 0 0 10px #ff0000; }
         .instructions-box {
-            background: rgba(255,255,255,0.05); border: 1px solid #444; padding: 20px; border-radius: 8px;
+            background: rgba(255,255,255,0.05); border: 1px solid #555; padding: 20px; border-radius: 8px;
             max-width: 600px; text-align: left; font-size: 15px; line-height: 1.6; color: #ddd; margin-bottom: 25px;
         }
         .instructions-box span { color: #ff9999; font-weight: bold; }
@@ -304,11 +292,8 @@
             • <span>1, 2, 3, 4, 5</span> - Select Inventory Item<br><br>
             <b>OBJECTIVE:</b> Uncover the secret weakness hidden in the house and defeat Smiler!
         </div>
-        <p style="color: #aaa; font-size: 20px;">[ CLICK ANYWHERE TO START ]</p>
+        <p style="color: #bbb; font-size: 20px;">[ CLICK ANYWHERE TO START ]</p>
     </div>
-
-    <div id="lid-top"></div>
-    <div id="lid-bottom"></div>
 
     <div id="crosshair" class="overlay">+</div>
     <div id="interact-prompt" class="overlay"></div>
@@ -356,40 +341,40 @@
 <script>
 // --- GAME STATE ENUM ---
 const STATE = {
-    WAKING: 0,
-    FIND_KEY: 1,
-    ENTER_HOUSE: 2,
-    NOTE1_READ: 3,
-    FIND_NOTE2: 4,
-    NOTE2_READ: 5,
-    CELLAR_UNLOCKED: 6,
-    IN_CELLAR_FIRST: 7,
-    CHOP_TREE: 8,
-    SEEK_BOX: 9,
-    FIND_CROWBAR: 10,
-    BREAK_BOX: 11,
-    HUNT_SMILER: 12,
-    SMILER_TALK1: 13,
-    SMILER_TALK2: 14,
-    INPUT_Q: 15,
-    WAIT_Q: 16,
-    READ_A: 17,
-    COUNTDOWN: 18,
-    CHASE: 19,
-    DEAD: 20,
-    WIN: 21
+    FIND_KEY: 0,
+    ENTER_HOUSE: 1,
+    NOTE1_READ: 2,
+    FIND_NOTE2: 3,
+    NOTE2_READ: 4,
+    CELLAR_UNLOCKED: 5,
+    IN_CELLAR_FIRST: 6,
+    CHOP_TREE: 7,
+    SEEK_BOX: 8,
+    FIND_CROWBAR: 9,
+    BREAK_BOX: 10,
+    HUNT_SMILER: 11,
+    SMILER_TALK1: 12,
+    SMILER_TALK2: 13,
+    INPUT_Q: 14,
+    WAIT_Q: 15,
+    READ_A: 16,
+    COUNTDOWN: 17,
+    CHASE: 18,
+    DEAD: 19,
+    WIN: 20
 };
 
-let currentState = STATE.WAKING;
+let currentState = STATE.FIND_KEY;
 let timeInState = 0;
 let hasKey = false;
 let hasCrowbar = false;
 let rugMoved = false;
-let trapdoorUnlocked = false;
+let trapdoorOpen = false;
 let barricaded = false;
 let barricadeHealth = 100;
 let countdownTimer = 15;
 let mirrorInteractableActive = false;
+let isClimbing = false;
 
 // --- INVENTORY SYSTEM ---
 const inventory = ["Empty", "Empty", "Empty", "Empty", "Empty"];
@@ -425,8 +410,6 @@ const ui = {
     gameOver: document.getElementById('game-over'),
     gameOverTitle: document.getElementById('game-over-title'),
     lvl2Btn: document.getElementById('level2-btn'),
-    lidTop: document.getElementById('lid-top'),
-    lidBottom: document.getElementById('lid-bottom'),
     barricadeContainer: document.getElementById('barricade-health-container'),
     barricadeBar: document.getElementById('barricade-health-bar')
 };
@@ -437,8 +420,8 @@ ui.lvl2Btn.addEventListener('click', () => {
 
 // --- THREE.JS SETUP ---
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x020202);
-scene.fog = new THREE.Fog(0x020202, 2, 35);
+scene.background = new THREE.Color(0x0a0d14);
+scene.fog = new THREE.Fog(0x0a0d14, 2, 45);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -446,15 +429,15 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
-// Lighting
-const ambientLight = new THREE.AmbientLight(0x223344, 0.5);
+// Brighter Lighting Setup
+const ambientLight = new THREE.AmbientLight(0x445566, 0.8);
 scene.add(ambientLight);
-const moonLight = new THREE.DirectionalLight(0x6688aa, 0.5);
-moonLight.position.set(10, 20, 10);
+const moonLight = new THREE.DirectionalLight(0x88aabb, 0.8);
+moonLight.position.set(10, 25, 10);
 scene.add(moonLight);
 
-const houseLight = new THREE.PointLight(0xffaa44, 1.2, 12);
-houseLight.position.set(0, 3.2, -15);
+const houseLight = new THREE.PointLight(0xffddaa, 1.8, 15);
+houseLight.position.set(0, 3.5, -15);
 scene.add(houseLight);
 
 // Floating Guidance Arrow
@@ -498,7 +481,7 @@ document.addEventListener('keydown', (e) => {
     if(e.code === 'KeyS') keys.s = true;
     if(e.code === 'KeyD') keys.d = true;
     if(e.code === 'Space') {
-        if(isGrounded && currentState !== STATE.DEAD) {
+        if(isGrounded && currentState !== STATE.DEAD && !isClimbing) {
             verticalVelocity = jumpStrength;
             isGrounded = false;
         }
@@ -523,7 +506,7 @@ document.addEventListener('keyup', (e) => {
 ui.start.addEventListener('click', () => {
     ui.start.style.display = 'none';
     document.body.requestPointerLock();
-    startWakingSequence();
+    flashText("The house is locked.");
 });
 document.body.addEventListener('click', () => {
     if (ui.start.style.display === 'none' && 
@@ -545,21 +528,21 @@ function addWallCollider(x, z, w, d) {
 }
 
 // Ground
-const groundMat = new THREE.MeshLambertMaterial({ color: 0x112211 });
-const groundGeo = new THREE.PlaneGeometry(200, 200);
+const groundMat = new THREE.MeshLambertMaterial({ color: 0x1a2f1a });
+const groundGeo = new THREE.PlaneGeometry(250, 250);
 const ground = new THREE.Mesh(groundGeo, groundMat);
 ground.rotation.x = -Math.PI / 2;
 scene.add(ground);
 
 // Forest Trees
 const trunkGeo = new THREE.CylinderGeometry(0.3, 0.4, 3);
-const trunkMat = new THREE.MeshLambertMaterial({ color: 0x3d2817 });
+const trunkMat = new THREE.MeshLambertMaterial({ color: 0x4a321f });
 const leavesGeo = new THREE.ConeGeometry(1.5, 4);
-const leavesMat = new THREE.MeshLambertMaterial({ color: 0x0f2a10 });
+const leavesMat = new THREE.MeshLambertMaterial({ color: 0x143815 });
 
 for (let i = 0; i < 150; i++) {
-    let tx = (Math.random() - 0.5) * 80;
-    let tz = (Math.random() - 0.5) * 80;
+    let tx = (Math.random() - 0.5) * 90;
+    let tz = (Math.random() - 0.5) * 90;
     if (Math.abs(tx) < 6 && tz > -25 && tz < 5) continue;
     if (tx > 6 && tx < 15 && tz > -12 && tz < -4) continue;
     
@@ -596,12 +579,12 @@ keyMesh.userData = { type: 'key' };
 scene.add(keyMesh);
 interactables.push(keyMesh);
 
-// --- REBUILT CABIN INTERIOR & STRUCTURE ---
-const wallMat = new THREE.MeshLambertMaterial({ color: 0x3d2b1f });
-const floorMat = new THREE.MeshLambertMaterial({ color: 0x2b1c14 });
-const ceilingMat = new THREE.MeshLambertMaterial({ color: 0x1f140e });
+// --- CABIN INTERIOR & STRUCTURE ---
+const wallMat = new THREE.MeshLambertMaterial({ color: 0x4a3222 });
+const floorMat = new THREE.MeshLambertMaterial({ color: 0x332218 });
+const ceilingMat = new THREE.MeshLambertMaterial({ color: 0x221610 });
 
-// Cabin Floor (Outside floor level)
+// Cabin Floor
 const houseFloor = new THREE.Mesh(new THREE.BoxGeometry(9.5, 0.1, 9.5), floorMat);
 houseFloor.position.set(0, 0.05, -15);
 scene.add(houseFloor);
@@ -633,15 +616,15 @@ hwF2.position.set(3, 2, -10);
 scene.add(hwF2); addWallCollider(3, -10, 3.5, 0.5);
 
 // Roof
-const roof = new THREE.Mesh(new THREE.ConeGeometry(8, 3, 4), new THREE.MeshLambertMaterial({ color: 0x1a0f0a }));
+const roof = new THREE.Mesh(new THREE.ConeGeometry(8, 3, 4), new THREE.MeshLambertMaterial({ color: 0x24140d }));
 roof.position.set(0, 5.5, -15);
 roof.rotation.y = Math.PI/4;
 scene.add(roof);
 
-// Door & Barricade
+// Door & Barricade Colliders
 const doorPivot = new THREE.Group();
 doorPivot.position.set(-1.25, 0, -10);
-const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(2.5, 3.8, 0.2), new THREE.MeshLambertMaterial({ color: 0x5c4033 }));
+const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(2.5, 3.8, 0.2), new THREE.MeshLambertMaterial({ color: 0x6b4433 }));
 doorMesh.position.set(1.25, 1.9, 0);
 doorPivot.add(doorMesh);
 scene.add(doorPivot);
@@ -649,12 +632,13 @@ let doorOpen = false;
 let doorMoving = false;
 doorMesh.userData = { type: 'door' };
 interactables.push(doorMesh);
+
 let doorColliderIdx = solidWalls.length;
-addWallCollider(0, -10, 2.5, 0.5);
+addWallCollider(0, -10, 2.5, 0.5); // Starts closed (blocks passage)
 
 const barricadeMesh = new THREE.Group();
 for(let i=0; i<4; i++) {
-    const plank = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.4, 0.15), new THREE.MeshLambertMaterial({ color: 0x2d1e13 }));
+    const plank = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.4, 0.15), new THREE.MeshLambertMaterial({ color: 0x3d2817 }));
     plank.position.set(0, 0.8 + i*0.8, -10);
     plank.rotation.z = (i % 2 === 0 ? 1 : -1) * 0.08;
     barricadeMesh.add(plank);
@@ -662,89 +646,82 @@ for(let i=0; i<4; i++) {
 barricadeMesh.visible = false;
 scene.add(barricadeMesh);
 
-// --- CLEANED FURNITURE (NO CLIPPING) ---
-// Bed
+// --- FURNITURE & ORIGINAL CREEPY NOTES ---
 const bedGroup = new THREE.Group();
-const bedFrame = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.5, 4.0), new THREE.MeshLambertMaterial({ color: 0x3d2817 }));
+const bedFrame = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.5, 4.0), new THREE.MeshLambertMaterial({ color: 0x4a321f }));
 bedFrame.position.set(0, 0.25, 0);
-const mattress = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.4, 3.8), new THREE.MeshLambertMaterial({ color: 0x8899aa }));
+const mattress = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.4, 3.8), new THREE.MeshLambertMaterial({ color: 0x99aabb }));
 mattress.position.set(0, 0.6, 0);
-const pillow = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.2, 0.8), new THREE.MeshLambertMaterial({ color: 0xeeeeee }));
-pillow.position.set(0, 0.85, -1.3);
-bedGroup.add(bedFrame); bedGroup.add(mattress); bedGroup.add(pillow);
+bedGroup.add(bedFrame); bedGroup.add(mattress);
 bedGroup.position.set(-3.2, 0, -17.5);
 scene.add(bedGroup);
 addWallCollider(-3.2, -17.5, 2.4, 4.0);
 
-// Wooden Table
 const tableGroup = new THREE.Group();
-const tableTop = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.1, 1.6), new THREE.MeshLambertMaterial({ color: 0x4a3222 }));
+const tableTop = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.1, 1.6), new THREE.MeshLambertMaterial({ color: 0x5a3d28 }));
 tableTop.position.set(0, 0.9, 0);
 tableGroup.add(tableTop);
-const legGeo = new THREE.BoxGeometry(0.12, 0.9, 0.12);
-const legMat = new THREE.MeshLambertMaterial({ color: 0x3a2212 });
-[[-0.9, -0.6], [0.9, -0.6], [-0.9, 0.6], [0.9, 0.6]].forEach(p => {
-    let leg = new THREE.Mesh(legGeo, legMat);
-    leg.position.set(p[0], 0.45, p[1]);
-    tableGroup.add(leg);
-});
 tableGroup.position.set(3.2, 0, -17.5);
 scene.add(tableGroup);
 addWallCollider(3.2, -17.5, 2.2, 1.6);
 
-// Note 1 (Placed safely on table)
+// Note 1 (Original Creepy Text)
 const noteGeo = new THREE.BoxGeometry(0.4, 0.02, 0.5);
 const noteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
 const note1 = new THREE.Mesh(noteGeo, noteMat);
 note1.position.set(3.2, 0.96, -17.5);
-note1.userData = { type: 'note1' };
+note1.userData = { type: 'note1', text: "They watch from the woods. Do not let them smile back." };
 scene.add(note1);
 interactables.push(note1);
 
-// Note 2 (Under rug)
+// Note 2 (Under rug - Original Creepy Text)
 const note2 = new THREE.Mesh(noteGeo, noteMat);
 note2.position.set(0, 0.02, -14);
-note2.userData = { type: 'note2' };
-scene.add(note2);
+note2.userData = { type: 'note2', text: "The trapdoor is unlocked. Descend into the dark where it waits." };
 
-// RUG & TRAPDOOR MECHANIC (Clean floor design)
+// Rug & Animated Trapdoor
 const rugGeo = new THREE.BoxGeometry(2.4, 0.02, 3.2);
-const rugMat = new THREE.MeshLambertMaterial({ color: 0x771111 });
-const rugMesh = new THREE.Mesh(rugGeo, rugMat);
+const rugMesh = new THREE.Mesh(rugGeo, new THREE.MeshLambertMaterial({ color: 0x882222 }));
 rugMesh.position.set(0, 0.11, -14);
 rugMesh.userData = { type: 'rug' };
 scene.add(rugMesh);
+interactables.push(rugMesh);
 
-// Trapdoor (Embedded into floor frame)
-const trapdoorGroup = new THREE.Group();
-const tdFrame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.02, 2.2), new THREE.MeshLambertMaterial({ color: 0x111111 }));
-const tdDoor = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.04, 2.0), new THREE.MeshLambertMaterial({ color: 0x2d1a0e }));
-tdDoor.position.set(0, 0.01, 0);
-const tdRing = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.02, 8, 16), new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8 }));
+// Trapdoor Pivot Group for Smooth Opening Animation
+const trapdoorPivot = new THREE.Group();
+const tdDoor = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.04, 2.0), new THREE.MeshLambertMaterial({ color: 0x3d2817 }));
+tdDoor.position.set(1.0, 0.02, 0); // Pivot on edge
+const tdRing = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.02, 8, 16), new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.8 }));
 tdRing.rotation.x = Math.PI / 2;
-tdRing.position.set(0.7, 0.04, 0);
-trapdoorGroup.add(tdFrame); trapdoorGroup.add(tdDoor); trapdoorGroup.add(tdRing);
-trapdoorGroup.position.set(0, 0.08, -14);
-trapdoorGroup.userData = { type: 'trapdoor' };
-scene.add(trapdoorGroup);
+tdRing.position.set(1.7, 0.05, 0);
+trapdoorPivot.add(tdDoor); trapdoorPivot.add(tdRing);
+trapdoorPivot.position.set(-1.0, 0.08, -13.0);
+trapdoorPivot.userData = { type: 'trapdoor' };
+scene.add(trapdoorPivot);
+interactables.push(trapdoorPivot);
+let trapdoorMoving = false;
 
-// --- CELLAR SETUP ---
+// --- CELLAR SETUP (SAFE BOUNDS) ---
 const cellarGroup = new THREE.Group();
 cellarGroup.position.set(0, -6, -14);
 
-const cellarFloor = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.MeshLambertMaterial({ color: 0x0a0a0a }));
+const cellarFloor = new THREE.Mesh(new THREE.PlaneGeometry(16, 16), new THREE.MeshLambertMaterial({ color: 0x111111 }));
 cellarFloor.rotation.x = -Math.PI / 2;
 cellarGroup.add(cellarFloor);
 
-const cellarWallMat = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
-const cwBack = new THREE.Mesh(new THREE.BoxGeometry(8, 4, 0.2), cellarWallMat); cwBack.position.set(0, 2, -4); cellarGroup.add(cwBack);
-const cwLeft = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 8), cellarWallMat); cwLeft.position.set(-4, 2, 0); cellarGroup.add(cwLeft);
-const cwRight = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 8), cellarWallMat); cwRight.position.set(4, 2, 0); cellarGroup.add(cwRight);
+const cellarWallMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
+const cwBack = new THREE.Mesh(new THREE.BoxGeometry(16, 6, 0.3), cellarWallMat); cwBack.position.set(0, 3, -8); cellarGroup.add(cwBack);
+addWallCollider(0, -22, 16, 0.3); // Cellar back wall collider
+const cwFront = new THREE.Mesh(new THREE.BoxGeometry(16, 6, 0.3), cellarWallMat); cwFront.position.set(0, 3, 8); cellarGroup.add(cwFront);
+const cwLeft = new THREE.Mesh(new THREE.BoxGeometry(0.3, 6, 16), cellarWallMat); cwLeft.position.set(-8, 3, 0); cellarGroup.add(cwLeft);
+addWallCollider(-8, -14, 0.3, 16);
+const cwRight = new THREE.Mesh(new THREE.BoxGeometry(0.3, 6, 16), cellarWallMat); cwRight.position.set(8, 3, 0); cellarGroup.add(cwRight);
+addWallCollider(8, -14, 0.3, 16);
 
 // Ladder
 const ladderGroup = new THREE.Group();
 for(let i=0; i<12; i++) {
-    const rung = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.08), new THREE.MeshBasicMaterial({ color: 0x664422 }));
+    const rung = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.08), new THREE.MeshBasicMaterial({ color: 0x775533 }));
     rung.position.set(0, i * 0.5 - 5.5, -0.9);
     ladderGroup.add(rung);
 }
@@ -762,31 +739,32 @@ axeMesh.userData = { type: 'axe' };
 cellarGroup.add(axeMesh);
 
 // Mirror & Note in Cellar
-const mirrorFrame = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.0, 0.1), new THREE.MeshStandardMaterial({ color: 0xb8860b }));
-const mirrorGlass = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.8), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 1.0, roughness: 0.1 }));
+const mirrorFrame = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.0, 0.1), new THREE.MeshStandardMaterial({ color: 0xd4af37 }));
+const mirrorGlass = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.8), new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 1.0, roughness: 0.05 }));
 mirrorGlass.position.z = 0.06;
 const mirrorGroup = new THREE.Group();
 mirrorGroup.add(mirrorFrame); mirrorGroup.add(mirrorGlass);
-mirrorGroup.position.set(2.5, 1.2, -17.5);
+mirrorGroup.position.set(3.5, 1.2, -17.5);
 mirrorGroup.userData = { type: 'mirror' };
 scene.add(mirrorGroup);
 
 const mirrorNote = new THREE.Mesh(noteGeo, noteMat);
-mirrorNote.position.set(2.5, 0.02, -16.5);
-mirrorNote.userData = { type: 'mirrornote' };
+mirrorNote.position.set(3.5, 0.02, -16.5);
+mirrorNote.userData = { type: 'mirrornote', text: "The one with the yellow face cannot look at themselves without perishing." };
 scene.add(mirrorNote);
+interactables.push(mirrorNote);
 
 scene.add(cellarGroup);
 
 // Crowbar behind house
-const crowbarMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.2), new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8 }));
+const crowbarMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.2), new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.8 }));
 crowbarMesh.rotation.z = Math.PI / 3;
 crowbarMesh.position.set(0, 0.2, -22);
 crowbarMesh.userData = { type: 'crowbar' };
 scene.add(crowbarMesh);
 
 // Mystery Box outside
-const mysteryBox = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 1.5), new THREE.MeshLambertMaterial({ color: 0x8b5a2b }));
+const mysteryBox = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 1.5), new THREE.MeshLambertMaterial({ color: 0x5a3d28 }));
 mysteryBox.position.set(10, 0.75, -8);
 scene.add(mysteryBox);
 mysteryBox.userData = { type: 'box' };
@@ -797,7 +775,7 @@ function createFaceTexture(scary) {
     const cvs = document.createElement('canvas');
     cvs.width = 512; cvs.height = 512;
     const ctx = cvs.getContext('2d');
-    ctx.fillStyle = scary ? '#880000' : '#ffdd00';
+    ctx.fillStyle = scary ? '#990000' : '#ffea00';
     ctx.fillRect(0,0,512,512);
     
     if(!scary) {
@@ -829,36 +807,9 @@ smiler.visible = false;
 scene.add(smiler);
 smiler.userData = { type: 'smiler' };
 
-const boxPieces = [];
-
-// --- GAME LOGIC / FLOW ---
-let playerHeight = 0.2;
+// --- GAME LOGIC & FLOW ---
+let playerHeight = 1.7; // Fixed starting height immediately!
 camera.position.set(0, playerHeight, 0);
-
-function startWakingSequence() {
-    setTimeout(() => {
-        ui.lidTop.style.height = '20%';
-        ui.lidBottom.style.height = '20%';
-        setTimeout(() => {
-            ui.lidTop.style.height = '40%';
-            ui.lidBottom.style.height = '40%';
-            setTimeout(() => {
-                ui.lidTop.style.height = '0%';
-                ui.lidBottom.style.height = '0%';
-                let standInterval = setInterval(() => {
-                    playerHeight += 0.05;
-                    if(playerHeight >= 1.7) {
-                        playerHeight = 1.7;
-                        clearInterval(standInterval);
-                        currentState = STATE.FIND_KEY;
-                        timeInState = 0;
-                        flashText("The house is locked.");
-                    }
-                }, 30);
-            }, 800);
-        }, 800);
-    }, 500);
-}
 
 function flashText(msg) {
     ui.flash.innerText = msg;
@@ -879,14 +830,13 @@ function hideDialog() {
 }
 
 function handleZPress() {
-    if(currentState === STATE.DEAD || currentState === STATE.WIN) return;
+    if(currentState === STATE.DEAD || currentState === STATE.WIN || isClimbing) return;
 
     if(currentState === STATE.NOTE1_READ) {
         ui.note.style.display = 'none';
         currentState = STATE.FIND_NOTE2;
         timeInState = 0;
-        flashText("Check under the rug...");
-        interactables.push(rugMesh);
+        flashText("Check under the rug inside...");
         return;
     }
 
@@ -894,13 +844,13 @@ function handleZPress() {
         ui.note.style.display = 'none';
         currentState = STATE.CELLAR_UNLOCKED;
         timeInState = 0;
-        flashText("The house key works on the trapdoor too.");
-        interactables.push(trapdoorGroup);
+        flashText("Descend into the cellar.");
+        interactables.push(axeMesh);
         return;
     }
 
     if(currentState === STATE.SMILER_TALK1) {
-        showDialog("Ask me a question. I know almost everything.");
+        showDialog("Ask me a question. I know everything.");
         currentState = STATE.SMILER_TALK2;
         return;
     }
@@ -960,9 +910,9 @@ function handleZPress() {
             let step = doorOpen ? -0.05 : 0.05;
             
             if(!doorOpen) {
-                solidWalls[doorColliderIdx].minX = 0; solidWalls[doorColliderIdx].maxX = 0;
+                solidWalls[doorColliderIdx].minX = 0; solidWalls[doorColliderIdx].maxX = 0; // Open door (no block)
             } else {
-                solidWalls[doorColliderIdx].minX = 0; solidWalls[doorColliderIdx].maxX = 2.5;
+                solidWalls[doorColliderIdx].minX = -1.25; solidWalls[doorColliderIdx].maxX = 1.25; // Closed door (blocks)
             }
 
             let anim = setInterval(() => {
@@ -976,32 +926,38 @@ function handleZPress() {
             }, 16);
         }
         else if (type === 'note1' && currentState === STATE.ENTER_HOUSE) {
-            ui.noteTxt.innerText = "They're coming... Check under the rug.";
+            ui.noteTxt.innerText = activeInteractable.userData.text;
             ui.note.style.display = 'flex';
             currentState = STATE.NOTE1_READ;
         }
-        else if (type === 'rug' && currentState === STATE.FIND_NOTE2) {
+        else if (type === 'rug' && currentState === STATE.FIND_NOTE2 && !rugMoved) {
             rugMesh.position.x = 2.2;
             rugMoved = true;
-            currentState = STATE.FIND_NOTE2;
             interactables.push(note2);
-            flashText("Uncovered torn note!");
+            flashText("Uncovered hidden note!");
         }
         else if (type === 'note2' && currentState === STATE.FIND_NOTE2) {
-            ui.noteTxt.innerText = "...The house key works on the trapdoor too.";
+            ui.noteTxt.innerText = activeInteractable.userData.text;
             ui.note.style.display = 'flex';
             currentState = STATE.NOTE2_READ;
         }
-        else if (type === 'trapdoor' && currentState === STATE.CELLAR_UNLOCKED) {
-            if(inventory[activeSlot] === "House Key" || hasKey) {
-                trapdoorUnlocked = true;
-                flashText("Unlocked trapdoor! Press Z on ladder to climb.");
-                currentState = STATE.IN_CELLAR_FIRST;
-                timeInState = 0;
-                interactables.push(axeMesh);
-            } else {
-                flashText("Equip the House Key (Slot 1) to unlock.");
-            }
+        else if (type === 'trapdoor' && !trapdoorMoving) {
+            // Trapdoor opens freely without locks
+            trapdoorMoving = true;
+            let target = trapdoorOpen ? 0 : -Math.PI / 2.2;
+            let step = trapdoorOpen ? 0.05 : -0.05;
+            let anim = setInterval(() => {
+                trapdoorPivot.rotation.z += step;
+                if((step < 0 && trapdoorPivot.rotation.z <= target) || (step > 0 && trapdoorPivot.rotation.z >= target)) {
+                    trapdoorPivot.rotation.z = target;
+                    trapdoorOpen = !trapdoorOpen;
+                    trapdoorMoving = false;
+                    clearInterval(anim);
+                    if(trapdoorOpen && currentState === STATE.CELLAR_UNLOCKED) {
+                        currentState = STATE.IN_CELLAR_FIRST;
+                    }
+                }
+            }, 16);
         }
         else if (type === 'axe' && currentState === STATE.IN_CELLAR_FIRST) {
             setInventoryItem(1, "Axe");
@@ -1041,14 +997,6 @@ function handleZPress() {
         }
         else if (type === 'box' && currentState === STATE.BREAK_BOX) {
             mysteryBox.visible = false;
-            for(let i=0; i<5; i++){
-                let p = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,0.5), new THREE.MeshLambertMaterial({ color: 0x8b5a2b }));
-                p.position.copy(mysteryBox.position);
-                p.userData.vel = new THREE.Vector3((Math.random()-0.5)*5, Math.random()*5, (Math.random()-0.5)*5);
-                scene.add(p);
-                boxPieces.push(p);
-            }
-            
             smiler.position.set(28, 1.2, -35); 
             smiler.visible = true;
             interactables.push(smiler);
@@ -1063,34 +1011,48 @@ function handleZPress() {
             showDialog("Hi! I'm Smiler! I know everything.");
         }
         else if (type === 'mirrornote') {
-            ui.noteTxt.innerText = "The one with the yellow face cannot look at themselves without getting destroyed.";
+            ui.noteTxt.innerText = activeInteractable.userData.text;
             ui.note.style.display = 'flex';
         }
-        else if (type === 'mirror') {
-            if(mirrorInteractableActive) {
-                setInventoryItem(4, "Mirror");
-                scene.remove(mirrorGroup);
-                flashText("Acquired Mirror! Hold it up to Smiler!");
-            }
+        else if (type === 'mirror' && mirrorInteractableActive) {
+            setInventoryItem(4, "Mirror");
+            scene.remove(mirrorGroup);
+            flashText("Acquired Mirror! Hold it up to Smiler!");
         }
     }
 }
 
-// Ladder Climbing Interaction (STRICTLY LOCKED UNTIL UNLOCKED)
+// Smooth Ladder Climbing Animation Function
 function handleLadderClimb() {
-    if(!trapdoorUnlocked) {
-        flashText("The trapdoor is locked!");
+    if (!trapdoorOpen) {
+        flashText("Open the trapdoor first!");
         return;
     }
 
-    if(camera.position.z < -13 && camera.position.z > -15 && Math.abs(camera.position.x) < 1.5) {
-        if(camera.position.y > 0) {
-            camera.position.set(0, -4.3, -14); // Down to cellar
-        } else {
-            camera.position.set(0, 1.7, -13); // Up to cabin
-        }
+    if (Math.abs(camera.position.x) < 1.5 && camera.position.z > -14.8 && camera.position.z < -13.2 && !isClimbing) {
+        isClimbing = true;
+        let startY = camera.position.y;
+        let targetY = startY > 0 ? -4.3 : 1.7;
+        let duration = 1.0;
+        let elapsed = 0;
+
+        let climbInterval = setInterval(() => {
+            elapsed += 0.016;
+            let t = Math.min(elapsed / duration, 1);
+            camera.position.y = startY + (targetY - startY) * t;
+            if (t >= 1) {
+                clearInterval(climbInterval);
+                isClimbing = false;
+            }
+        }, 16);
     }
 }
+
+document.addEventListener('keydown', (e) => {
+    if(e.code === 'KeyZ') {
+        handleLadderClimb();
+    }
+});
 
 // Groq Question Logic
 ui.inputBtn.addEventListener('click', async () => {
@@ -1136,7 +1098,7 @@ function moveSmilerWithPathfinding(dt) {
 }
 
 function updateGuidanceAndHints(dt) {
-    if(currentState <= STATE.WAKING || currentState >= STATE.CHASE) {
+    if(currentState >= STATE.COUNTDOWN) {
         ui.hint.style.opacity = 0;
         guideArrow.visible = false;
         return;
@@ -1156,10 +1118,10 @@ function updateGuidanceAndHints(dt) {
         hintMsg = "Move the rug on the floor inside the cabin.";
         targetObj = rugMesh;
     } else if (currentState === STATE.CELLAR_UNLOCKED) {
-        hintMsg = "Equip your House Key (Slot 1) and unlock the trapdoor.";
-        targetObj = trapdoorGroup;
+        hintMsg = "Open the trapdoor and descend into the cellar.";
+        targetObj = trapdoorPivot;
     } else if (currentState === STATE.IN_CELLAR_FIRST) {
-        hintMsg = "Descend the ladder into the cellar and grab the Axe.";
+        hintMsg = "Grab the Axe from the cellar floor.";
         targetObj = axeMesh;
     } else if (currentState === STATE.CHOP_TREE) {
         hintMsg = "Equip the Axe (Slot 2) and chop the weak tree in front of the house.";
@@ -1221,7 +1183,7 @@ function animate() {
     updateGuidanceAndHints(dt);
 
     // Physics & Jumping
-    if(!isGrounded) {
+    if(!isGrounded && !isClimbing) {
         verticalVelocity += gravity * dt;
         camera.position.y += verticalVelocity * dt;
         let groundY = (camera.position.y < -3) ? -4.3 : playerHeight;
@@ -1233,7 +1195,7 @@ function animate() {
     }
 
     // Player Movement
-    if (document.pointerLockElement === document.body && currentState !== STATE.DEAD && currentState !== STATE.WIN) {
+    if (document.pointerLockElement === document.body && currentState !== STATE.DEAD && currentState !== STATE.WIN && !isClimbing) {
         let dirZ = Number(keys.w) - Number(keys.s);
         let dirX = Number(keys.d) - Number(keys.a);
 
@@ -1277,7 +1239,7 @@ function animate() {
             else if(type === 'note1' && currentState === STATE.ENTER_HOUSE) { show = true; pText = "Z to read note"; }
             else if(type === 'rug' && currentState === STATE.FIND_NOTE2 && !rugMoved) { show = true; pText = "Z to move rug"; }
             else if(type === 'note2' && currentState === STATE.FIND_NOTE2) { show = true; pText = "Z to read torn note"; }
-            else if(type === 'trapdoor' && currentState === STATE.CELLAR_UNLOCKED) { show = true; pText = "Z to unlock trapdoor"; }
+            else if(type === 'trapdoor') { show = true; pText = trapdoorOpen ? "Z to close trapdoor" : "Z to open trapdoor"; }
             else if(type === 'axe' && currentState === STATE.IN_CELLAR_FIRST) { show = true; pText = "Z to pick up Axe"; }
             else if(type === 'tree' && currentState === STATE.CHOP_TREE) { show = true; pText = "Z to chop tree with Axe"; }
             else if(type === 'box' && (currentState === STATE.SEEK_BOX || currentState === STATE.BREAK_BOX)) { 
@@ -1295,9 +1257,9 @@ function animate() {
             }
         }
 
-        // Ladder Climb Prompt (Only shows if unlocked)
-        if(camera.position.z < -13 && camera.position.z > -15 && Math.abs(camera.position.x) < 1.5) {
-            ui.prompt.innerText = trapdoorUnlocked ? "Z to climb ladder" : "Trapdoor is locked";
+        // Ladder Climb Prompt
+        if(Math.abs(camera.position.x) < 1.5 && camera.position.z > -14.8 && camera.position.z < -13.2) {
+            ui.prompt.innerText = trapdoorOpen ? "Z to climb ladder" : "Trapdoor is closed";
             ui.prompt.style.display = 'block';
         }
     }
@@ -1354,13 +1316,6 @@ function animate() {
 
     renderer.render(scene, camera);
 }
-
-function handleZPressWrapper() {
-    if(camera.position.z < -13 && camera.position.z > -15 && Math.abs(camera.position.x) < 1.5) {
-        handleLadderClimb();
-    }
-}
-document.addEventListener('keydown', (e) => { if(e.code === 'KeyZ') handleZPressWrapper(); });
 
 animate();
 </script>
