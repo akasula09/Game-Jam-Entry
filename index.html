@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Inevitable</title>
+    <title>The Mysterious Forest</title>
     <style>
         body, html {
             margin: 0;
@@ -56,8 +56,11 @@
             left: 50%;
             transform: translateX(-50%);
             color: white;
-            font-size: 24px;
-            text-shadow: 2px 2px 0px #000;
+            font-size: 22px;
+            text-shadow: 2px 2px 4px #000;
+            background: rgba(0,0,0,0.5);
+            padding: 4px 12px;
+            border-radius: 4px;
         }
 
         #flash-text {
@@ -65,7 +68,7 @@
             left: 50%;
             transform: translateX(-50%);
             color: white;
-            font-size: 36px;
+            font-size: 32px;
             text-shadow: 3px 3px 0px #000;
             opacity: 0;
             transition: opacity 0.5s;
@@ -79,7 +82,7 @@
             transform: translateX(-50%);
             color: #aaa;
             font-size: 18px;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
             padding: 10px 20px;
             border-radius: 5px;
             opacity: 0;
@@ -184,7 +187,7 @@
 
         #note-view p {
             color: #900;
-            font-size: 28px;
+            font-size: 26px;
             font-weight: bold;
             font-style: italic;
             margin: 0;
@@ -273,7 +276,6 @@
             box-shadow: 0 0 25px rgba(255, 0, 0, 0.9);
         }
 
-        /* Detailed Start Screen Instructions */
         .click-to-start {
             position: absolute; top:0; left:0; width:100%; height:100%;
             background: #050505; color: white; display: flex; flex-direction: column;
@@ -298,9 +300,9 @@
             • <span>W / A / S / D</span> - Move around<br>
             • <span>MOUSE</span> - Look around<br>
             • <span>SPACE</span> - Jump<br>
-            • <span>Z</span> - Interact / Read / Action<br>
+            • <span>Z</span> - Interact / Read / Action / Ladder<br>
             • <span>1, 2, 3, 4, 5</span> - Select Inventory Item<br><br>
-            <b>OBJECTIVE:</b> Find a way to barricade yourself and uncover Smiler's hidden weakness before he catches you!
+            <b>OBJECTIVE:</b> Uncover the secret weakness hidden in the house and defeat Smiler!
         </div>
         <p style="color: #aaa; font-size: 20px;">[ CLICK ANYWHERE TO START ]</p>
     </div>
@@ -429,7 +431,6 @@ const ui = {
     barricadeBar: document.getElementById('barricade-health-bar')
 };
 
-// Redirect Button Event Listener
 ui.lvl2Btn.addEventListener('click', () => {
     window.location.href = '/leveltwo';
 });
@@ -440,23 +441,24 @@ scene.background = new THREE.Color(0x020202);
 scene.fog = new THREE.Fog(0x020202, 2, 35);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-const renderer = new THREE.WebGLRenderer({ antialias: false });
+const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
 // Lighting
-const ambientLight = new THREE.AmbientLight(0x223344, 0.6);
+const ambientLight = new THREE.AmbientLight(0x223344, 0.5);
 scene.add(ambientLight);
 const moonLight = new THREE.DirectionalLight(0x6688aa, 0.5);
 moonLight.position.set(10, 20, 10);
 scene.add(moonLight);
-const houseLight = new THREE.PointLight(0xffa500, 0.8, 15);
-houseLight.position.set(0, 2, -15);
+
+const houseLight = new THREE.PointLight(0xffaa44, 1.2, 12);
+houseLight.position.set(0, 3.2, -15);
 scene.add(houseLight);
 
-// Floating Arrow Guidance Mesh
-const arrowGeo = new THREE.ConeGeometry(0.4, 1.2, 8);
+// Floating Guidance Arrow
+const arrowGeo = new THREE.ConeGeometry(0.3, 1.0, 8);
 arrowGeo.rotateX(Math.PI);
 const arrowMat = new THREE.MeshBasicMaterial({ color: 0xff3333, wireframe: true });
 const guideArrow = new THREE.Mesh(arrowGeo, arrowMat);
@@ -468,15 +470,13 @@ let pitch = 0;
 let yaw = 0;
 const PI_2 = Math.PI / 2;
 const keys = { w: false, a: false, s: false, d: false, z: false, space: false };
-const velocity = new THREE.Vector3();
 let speed = 6.0;
 let smilerSpeed = 2.0;
 
-// Jump Variables
 let isGrounded = true;
 let verticalVelocity = 0;
 const gravity = -18.0;
-const jumpStrength = 7.0;
+const jumpStrength = 6.5;
 
 document.addEventListener('mousemove', (e) => {
     if (document.pointerLockElement === document.body && currentState !== STATE.DEAD) {
@@ -585,54 +585,63 @@ scene.add(weakTreeGroup);
 weakTrunk.userData = { type: 'tree' };
 addWallCollider(2, -6, 1.0, 1.0);
 
-// Key & Key Post
-const postGeo = new THREE.CylinderGeometry(0.1, 0.1, 1.5);
-const postMesh = new THREE.Mesh(postGeo, trunkMat);
+// Key Post & Key
+const postMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.5), trunkMat);
 postMesh.position.set(-18, 0.75, -5);
 scene.add(postMesh);
 
-const keyGeo = new THREE.TorusGeometry(0.15, 0.04, 8, 16);
-const keyMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
-const keyMesh = new THREE.Mesh(keyGeo, keyMat);
+const keyMesh = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.04, 8, 16), new THREE.MeshBasicMaterial({ color: 0xffd700 }));
 keyMesh.position.set(-18, 1.3, -4.8);
 keyMesh.userData = { type: 'key' };
 scene.add(keyMesh);
 interactables.push(keyMesh);
 
-// House Setup
-const houseMat = new THREE.MeshLambertMaterial({ color: 0x444444 });
-const hwBack = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), houseMat);
+// --- REBUILT CABIN INTERIOR & STRUCTURE ---
+const wallMat = new THREE.MeshLambertMaterial({ color: 0x3d2b1f });
+const floorMat = new THREE.MeshLambertMaterial({ color: 0x2b1c14 });
+const ceilingMat = new THREE.MeshLambertMaterial({ color: 0x1f140e });
+
+// Cabin Floor (Outside floor level)
+const houseFloor = new THREE.Mesh(new THREE.BoxGeometry(9.5, 0.1, 9.5), floorMat);
+houseFloor.position.set(0, 0.05, -15);
+scene.add(houseFloor);
+
+// House Ceiling
+const houseCeiling = new THREE.Mesh(new THREE.BoxGeometry(9.5, 0.1, 9.5), ceilingMat);
+houseCeiling.position.set(0, 3.95, -15);
+scene.add(houseCeiling);
+
+// Exterior Walls
+const hwBack = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.5), wallMat);
 hwBack.position.set(0, 2, -20);
 scene.add(hwBack); addWallCollider(0, -20, 10, 0.5);
 
-const hwLeft = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), houseMat);
+const hwLeft = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), wallMat);
 hwLeft.position.set(-4.75, 2, -15);
 scene.add(hwLeft); addWallCollider(-4.75, -15, 0.5, 10);
 
-const hwRight = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), houseMat);
+const hwRight = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4, 10), wallMat);
 hwRight.position.set(4.75, 2, -15);
 scene.add(hwRight); addWallCollider(4.75, -15, 0.5, 10);
 
-const hwF1 = new THREE.Mesh(new THREE.BoxGeometry(3.5, 4, 0.5), houseMat);
+const hwF1 = new THREE.Mesh(new THREE.BoxGeometry(3.5, 4, 0.5), wallMat);
 hwF1.position.set(-3, 2, -10);
 scene.add(hwF1); addWallCollider(-3, -10, 3.5, 0.5);
 
-const hwF2 = new THREE.Mesh(new THREE.BoxGeometry(3.5, 4, 0.5), houseMat);
+const hwF2 = new THREE.Mesh(new THREE.BoxGeometry(3.5, 4, 0.5), wallMat);
 hwF2.position.set(3, 2, -10);
 scene.add(hwF2); addWallCollider(3, -10, 3.5, 0.5);
 
-const roofGeo = new THREE.ConeGeometry(8, 3, 4);
-const roofMat = new THREE.MeshLambertMaterial({ color: 0x221111 });
-const roof = new THREE.Mesh(roofGeo, roofMat);
+// Roof
+const roof = new THREE.Mesh(new THREE.ConeGeometry(8, 3, 4), new THREE.MeshLambertMaterial({ color: 0x1a0f0a }));
 roof.position.set(0, 5.5, -15);
 roof.rotation.y = Math.PI/4;
 scene.add(roof);
 
-// Door & Barricade Planks
+// Door & Barricade
 const doorPivot = new THREE.Group();
 doorPivot.position.set(-1.25, 0, -10);
-const doorGeo = new THREE.BoxGeometry(2.5, 3.8, 0.2);
-const doorMesh = new THREE.Mesh(doorGeo, new THREE.MeshLambertMaterial({ color: 0x5c4033 }));
+const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(2.5, 3.8, 0.2), new THREE.MeshLambertMaterial({ color: 0x5c4033 }));
 doorMesh.position.set(1.25, 1.9, 0);
 doorPivot.add(doorMesh);
 scene.add(doorPivot);
@@ -643,10 +652,9 @@ interactables.push(doorMesh);
 let doorColliderIdx = solidWalls.length;
 addWallCollider(0, -10, 2.5, 0.5);
 
-// Barricade Mesh (Planks across doorway)
 const barricadeMesh = new THREE.Group();
 for(let i=0; i<4; i++) {
-    const plank = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.4, 0.15), new THREE.MeshLambertMaterial({ color: 0x3d2817 }));
+    const plank = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.4, 0.15), new THREE.MeshLambertMaterial({ color: 0x2d1e13 }));
     plank.position.set(0, 0.8 + i*0.8, -10);
     plank.rotation.z = (i % 2 === 0 ? 1 : -1) * 0.08;
     barricadeMesh.add(plank);
@@ -654,65 +662,89 @@ for(let i=0; i<4; i++) {
 barricadeMesh.visible = false;
 scene.add(barricadeMesh);
 
-// Furniture
-const bed = new THREE.Mesh(new THREE.BoxGeometry(3, 1, 5), new THREE.MeshLambertMaterial({ color: 0x223355 }));
-bed.position.set(-2.5, 0.5, -17);
-scene.add(bed); addWallCollider(-2.5, -17, 3, 5);
+// --- CLEANED FURNITURE (NO CLIPPING) ---
+// Bed
+const bedGroup = new THREE.Group();
+const bedFrame = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.5, 4.0), new THREE.MeshLambertMaterial({ color: 0x3d2817 }));
+bedFrame.position.set(0, 0.25, 0);
+const mattress = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.4, 3.8), new THREE.MeshLambertMaterial({ color: 0x8899aa }));
+mattress.position.set(0, 0.6, 0);
+const pillow = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.2, 0.8), new THREE.MeshLambertMaterial({ color: 0xeeeeee }));
+pillow.position.set(0, 0.85, -1.3);
+bedGroup.add(bedFrame); bedGroup.add(mattress); bedGroup.add(pillow);
+bedGroup.position.set(-3.2, 0, -17.5);
+scene.add(bedGroup);
+addWallCollider(-3.2, -17.5, 2.4, 4.0);
 
-const table = new THREE.Mesh(new THREE.BoxGeometry(2, 1.2, 2), new THREE.MeshLambertMaterial({color: 0x553311}));
-table.position.set(2.5, 0.6, -18);
-scene.add(table); addWallCollider(2.5, -18, 2, 2);
+// Wooden Table
+const tableGroup = new THREE.Group();
+const tableTop = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.1, 1.6), new THREE.MeshLambertMaterial({ color: 0x4a3222 }));
+tableTop.position.set(0, 0.9, 0);
+tableGroup.add(tableTop);
+const legGeo = new THREE.BoxGeometry(0.12, 0.9, 0.12);
+const legMat = new THREE.MeshLambertMaterial({ color: 0x3a2212 });
+[[-0.9, -0.6], [0.9, -0.6], [-0.9, 0.6], [0.9, 0.6]].forEach(p => {
+    let leg = new THREE.Mesh(legGeo, legMat);
+    leg.position.set(p[0], 0.45, p[1]);
+    tableGroup.add(leg);
+});
+tableGroup.position.set(3.2, 0, -17.5);
+scene.add(tableGroup);
+addWallCollider(3.2, -17.5, 2.2, 1.6);
 
-// Notes
-const noteGeo = new THREE.PlaneGeometry(0.4, 0.5);
+// Note 1 (Placed safely on table)
+const noteGeo = new THREE.BoxGeometry(0.4, 0.02, 0.5);
 const noteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-
 const note1 = new THREE.Mesh(noteGeo, noteMat);
-note1.rotation.x = -Math.PI / 2;
-note1.position.set(2.5, 1.21, -18);
+note1.position.set(3.2, 0.96, -17.5);
 note1.userData = { type: 'note1' };
 scene.add(note1);
 interactables.push(note1);
 
+// Note 2 (Under rug)
 const note2 = new THREE.Mesh(noteGeo, noteMat);
-note2.rotation.x = -Math.PI / 2;
-note2.position.set(-2.5, 1.01, -18.5);
+note2.position.set(0, 0.02, -14);
 note2.userData = { type: 'note2' };
 scene.add(note2);
 
-// RUG & TRAPDOOR MECHANIC
-const rugGeo = new THREE.PlaneGeometry(2.5, 3.5);
-const rugMat = new THREE.MeshLambertMaterial({ color: 0x661111 });
+// RUG & TRAPDOOR MECHANIC (Clean floor design)
+const rugGeo = new THREE.BoxGeometry(2.4, 0.02, 3.2);
+const rugMat = new THREE.MeshLambertMaterial({ color: 0x771111 });
 const rugMesh = new THREE.Mesh(rugGeo, rugMat);
-rugMesh.rotation.x = -Math.PI / 2;
-rugMesh.position.set(0, 0.01, -14);
+rugMesh.position.set(0, 0.11, -14);
 rugMesh.userData = { type: 'rug' };
 scene.add(rugMesh);
 
-const trapdoorGeo = new THREE.BoxGeometry(2, 0.1, 2);
-const trapdoorMat = new THREE.MeshLambertMaterial({ color: 0x221105 });
-const trapdoorMesh = new THREE.Mesh(trapdoorGeo, trapdoorMat);
-trapdoorMesh.position.set(0, 0.005, -14);
-trapdoorMesh.userData = { type: 'trapdoor' };
-scene.add(trapdoorMesh);
+// Trapdoor (Embedded into floor frame)
+const trapdoorGroup = new THREE.Group();
+const tdFrame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.02, 2.2), new THREE.MeshLambertMaterial({ color: 0x111111 }));
+const tdDoor = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.04, 2.0), new THREE.MeshLambertMaterial({ color: 0x2d1a0e }));
+tdDoor.position.set(0, 0.01, 0);
+const tdRing = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.02, 8, 16), new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8 }));
+tdRing.rotation.x = Math.PI / 2;
+tdRing.position.set(0.7, 0.04, 0);
+trapdoorGroup.add(tdFrame); trapdoorGroup.add(tdDoor); trapdoorGroup.add(tdRing);
+trapdoorGroup.position.set(0, 0.08, -14);
+trapdoorGroup.userData = { type: 'trapdoor' };
+scene.add(trapdoorGroup);
 
-// CELLAR ENVIRONMENT (Underneath house)
+// --- CELLAR SETUP ---
 const cellarGroup = new THREE.Group();
 cellarGroup.position.set(0, -6, -14);
 
-const cellarFloor = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.MeshLambertMaterial({ color: 0x111111 }));
+const cellarFloor = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.MeshLambertMaterial({ color: 0x0a0a0a }));
 cellarFloor.rotation.x = -Math.PI / 2;
 cellarGroup.add(cellarFloor);
 
-const cellarWallMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
+const cellarWallMat = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
 const cwBack = new THREE.Mesh(new THREE.BoxGeometry(8, 4, 0.2), cellarWallMat); cwBack.position.set(0, 2, -4); cellarGroup.add(cwBack);
 const cwLeft = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 8), cellarWallMat); cwLeft.position.set(-4, 2, 0); cellarGroup.add(cwLeft);
 const cwRight = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 8), cellarWallMat); cwRight.position.set(4, 2, 0); cellarGroup.add(cwRight);
 
-// Ladder from house to cellar
+// Ladder
 const ladderGroup = new THREE.Group();
 for(let i=0; i<12; i++) {
-    const rung = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.08), new THREE.MeshBasicMaterial({ color: 0x8b5a2b }));
+    const rung = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.08), new THREE.MeshBasicMaterial({ color: 0x664422 }));
     rung.position.set(0, i * 0.5 - 5.5, -0.9);
     ladderGroup.add(rung);
 }
@@ -740,8 +772,7 @@ mirrorGroup.userData = { type: 'mirror' };
 scene.add(mirrorGroup);
 
 const mirrorNote = new THREE.Mesh(noteGeo, noteMat);
-mirrorNote.rotation.x = -Math.PI / 2;
-mirrorNote.position.set(2.5, 0.01, -16.5);
+mirrorNote.position.set(2.5, 0.02, -16.5);
 mirrorNote.userData = { type: 'mirrornote' };
 scene.add(mirrorNote);
 
@@ -864,7 +895,7 @@ function handleZPress() {
         currentState = STATE.CELLAR_UNLOCKED;
         timeInState = 0;
         flashText("The house key works on the trapdoor too.");
-        interactables.push(trapdoorMesh);
+        interactables.push(trapdoorGroup);
         return;
     }
 
@@ -916,13 +947,12 @@ function handleZPress() {
                 flashText("It's locked tight.");
                 return;
             }
-            // Barricade action using planks
             if(inventory[activeSlot] === "Wooden Planks" && !barricaded) {
                 barricaded = true;
                 barricadeMesh.visible = true;
                 setInventoryItem(activeSlot, "Empty");
                 ui.barricadeContainer.style.display = 'flex';
-                flashText("Door Barricaded! High integrity!");
+                flashText("Door Barricaded!");
                 return;
             }
             doorMoving = true;
@@ -951,7 +981,7 @@ function handleZPress() {
             currentState = STATE.NOTE1_READ;
         }
         else if (type === 'rug' && currentState === STATE.FIND_NOTE2) {
-            rugMesh.position.x = 2.0; // Slide rug away
+            rugMesh.position.x = 2.2;
             rugMoved = true;
             currentState = STATE.FIND_NOTE2;
             interactables.push(note2);
@@ -965,12 +995,12 @@ function handleZPress() {
         else if (type === 'trapdoor' && currentState === STATE.CELLAR_UNLOCKED) {
             if(inventory[activeSlot] === "House Key" || hasKey) {
                 trapdoorUnlocked = true;
-                flashText("Unlocked trapdoor!");
+                flashText("Unlocked trapdoor! Press Z on ladder to climb.");
                 currentState = STATE.IN_CELLAR_FIRST;
                 timeInState = 0;
                 interactables.push(axeMesh);
             } else {
-                flashText("Equip the House Key to unlock.");
+                flashText("Equip the House Key (Slot 1) to unlock.");
             }
         }
         else if (type === 'axe' && currentState === STATE.IN_CELLAR_FIRST) {
@@ -978,7 +1008,7 @@ function handleZPress() {
             cellarGroup.remove(axeMesh);
             currentState = STATE.CHOP_TREE;
             timeInState = 0;
-            flashText("Acquired Axe! Chop down the weak tree in front of the house.");
+            flashText("Acquired Axe! Chop the weak tree in front of the house.");
             interactables.push(weakTrunk);
         }
         else if (type === 'tree' && currentState === STATE.CHOP_TREE) {
@@ -987,7 +1017,7 @@ function handleZPress() {
                 setInventoryItem(2, "Wooden Planks");
                 currentState = STATE.SEEK_BOX;
                 timeInState = 0;
-                flashText("Got Wooden Planks! Go search the box outside.");
+                flashText("Got Wooden Planks! Search the box outside.");
                 interactables.push(mysteryBox);
             } else {
                 flashText("Equip the Axe (Slot 2) to chop this tree.");
@@ -1040,14 +1070,19 @@ function handleZPress() {
             if(mirrorInteractableActive) {
                 setInventoryItem(4, "Mirror");
                 scene.remove(mirrorGroup);
-                flashText("Acquired Mirror! Hold it up to Smiler when he attacks!");
+                flashText("Acquired Mirror! Hold it up to Smiler!");
             }
         }
     }
 }
 
-// Ladder Climbing Interaction
+// Ladder Climbing Interaction (STRICTLY LOCKED UNTIL UNLOCKED)
 function handleLadderClimb() {
+    if(!trapdoorUnlocked) {
+        flashText("The trapdoor is locked!");
+        return;
+    }
+
     if(camera.position.z < -13 && camera.position.z > -15 && Math.abs(camera.position.x) < 1.5) {
         if(camera.position.y > 0) {
             camera.position.set(0, -4.3, -14); // Down to cellar
@@ -1089,7 +1124,6 @@ function moveSmilerWithPathfinding(dt) {
     dir.y = 0;
     dir.normalize();
 
-    // Check collision along Smiler's path
     let nextX = smiler.position.x + dir.x * smilerSpeed * dt;
     let nextZ = smiler.position.z + dir.z * smilerSpeed * dt;
     
@@ -1101,7 +1135,6 @@ function moveSmilerWithPathfinding(dt) {
     }
 }
 
-// --- UPDATE HINTS & GUIDANCE ---
 function updateGuidanceAndHints(dt) {
     if(currentState <= STATE.WAKING || currentState >= STATE.CHASE) {
         ui.hint.style.opacity = 0;
@@ -1124,7 +1157,7 @@ function updateGuidanceAndHints(dt) {
         targetObj = rugMesh;
     } else if (currentState === STATE.CELLAR_UNLOCKED) {
         hintMsg = "Equip your House Key (Slot 1) and unlock the trapdoor.";
-        targetObj = trapdoorMesh;
+        targetObj = trapdoorGroup;
     } else if (currentState === STATE.IN_CELLAR_FIRST) {
         hintMsg = "Descend the ladder into the cellar and grab the Axe.";
         targetObj = axeMesh;
@@ -1229,9 +1262,12 @@ function animate() {
     ui.prompt.style.display = 'none';
     if(currentState !== STATE.DEAD && currentState !== STATE.INPUT_Q) {
         raycaster.setFromCamera(screenCenter, camera);
-        const intersects = raycaster.intersectObjects(interactables);
+        const intersects = raycaster.intersectObjects(interactables, true);
         if (intersects.length > 0 && intersects[0].distance < 4) {
             let obj = intersects[0].object;
+            while(obj.parent && !obj.userData.type && obj.parent !== scene) {
+                obj = obj.parent;
+            }
             let type = obj.userData.type;
             let show = false;
             let pText = "";
@@ -1259,20 +1295,20 @@ function animate() {
             }
         }
 
-        // Ladder Climb Prompt
+        // Ladder Climb Prompt (Only shows if unlocked)
         if(camera.position.z < -13 && camera.position.z > -15 && Math.abs(camera.position.x) < 1.5) {
-            ui.prompt.innerText = "Z to climb ladder";
+            ui.prompt.innerText = trapdoorUnlocked ? "Z to climb ladder" : "Trapdoor is locked";
             ui.prompt.style.display = 'block';
         }
     }
 
-    // --- SMILER COUNTDOWN & SIEGE PHASES ---
+    // Smiler Chase & Siege Phases
     if(currentState === STATE.COUNTDOWN) {
         countdownTimer -= dt;
         flashText(`SMILER IS COMING IN: ${Math.ceil(countdownTimer)}`);
         if(countdownTimer <= 0) {
             currentState = STATE.CHASE;
-            smilerSpeed = 8.5; // Fast chase speed
+            smilerSpeed = 8.5;
             flashText("HE IS HUNTING YOU! RUN OR HIDE!");
             mirrorInteractableActive = true;
             interactables.push(mirrorGroup);
@@ -1282,10 +1318,9 @@ function animate() {
     if(currentState === STATE.CHASE) {
         smiler.lookAt(camera.position);
 
-        // If door is barricaded, Smiler must break through first (30s)
         if(barricaded && barricadeHealth > 0) {
-            smiler.position.set(0, 1.2, -8.5); // Smiler attacks outside front door
-            barricadeHealth -= (100 / 30) * dt; // Decrements over 30s
+            smiler.position.set(0, 1.2, -8.5);
+            barricadeHealth -= (100 / 30) * dt;
             ui.barricadeBar.style.width = `${Math.max(0, barricadeHealth)}%`;
 
             if(barricadeHealth <= 0) {
@@ -1295,14 +1330,10 @@ function animate() {
                 flashText("THE BARRICADE BROKE!");
             }
         } else {
-            // Pathfind directly to player
             moveSmilerWithPathfinding(dt);
-
             let dist = smiler.position.distanceTo(camera.position);
 
-            // MIRROR DEFEAT CONDITION
             if(inventory[activeSlot] === "Mirror" && dist < 4) {
-                // Player holding mirror directly at Smiler defeats him!
                 currentState = STATE.WIN;
                 flashText("SMILER LOOKED INTO THE MIRROR AND SHATTERED!");
                 scene.remove(smiler);
@@ -1312,7 +1343,6 @@ function animate() {
                     document.exitPointerLock();
                 }, 2000);
             }
-            // PLAYER CAUGHT CONDITION
             else if(dist < 1.5) {
                 currentState = STATE.DEAD;
                 ui.gameOverTitle.innerText = "GAME OVER.\n\nYOU WERE CONSUMED BY SMILER.\n\nWELCOME TO HIS BELLY.";
@@ -1325,7 +1355,6 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-// Ladder action listener wrapper
 function handleZPressWrapper() {
     if(camera.position.z < -13 && camera.position.z > -15 && Math.abs(camera.position.x) < 1.5) {
         handleLadderClimb();
