@@ -280,6 +280,7 @@ let smilerCountdown = 15;
 let smilerAttackTime = 0;
 let doorFallen = false;
 let barrierFallen = false;
+let isClimbingLadder = false;
 
 // Physics / Jump state
 let verticalVelocity = 0;
@@ -582,13 +583,18 @@ const bWallR = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4, 9.5), basementMat); 
 const ladderSupportWall = new THREE.Mesh(new THREE.BoxGeometry(1.6, 4, 0.3), basementMat);
 ladderSupportWall.position.set(-1.0, -2.0, -13.85);
 scene.add(ladderSupportWall);
+addWallCollider(-1.0, -13.85, 1.6, 0.3); // Solid wall collider prevents clipping behind ladder
 
 const ladderMat = new THREE.MeshLambertMaterial({ color: 0x553311 });
+const ladderGroup = new THREE.Group();
 for(let y=0; y<8; y++) {
     let rung = new THREE.Mesh(new THREE.BoxGeometry(1, 0.08, 0.08), ladderMat);
     rung.position.set(-1.0, -3.8 + y*0.5, -14.1);
-    scene.add(rung);
+    ladderGroup.add(rung);
+    rung.userData = { type: 'ladder' };
+    interactables.push(rung);
 }
+scene.add(ladderGroup);
 
 // Basement Tables & Items
 const bTable1 = new THREE.Mesh(new THREE.BoxGeometry(2, 1.2, 1.5), ladderMat);
@@ -906,6 +912,11 @@ function handleZPress() {
             showDialog("Hi! I'm smiler! I know a lot.");
         }
         else if (type === 'trapdoor') {
+            // Trapdoor can ONLY be toggled if player is on the 1st floor (y > -1.0)
+            if (camera.position.y < -1.0) {
+                flashText("You can only reach the trapdoor from the 1st floor!");
+                return;
+            }
             trapdoorOpen = !trapdoorOpen;
             let targetRot = trapdoorOpen ? -Math.PI / 1.8 : 0;
             let anim = setInterval(() => {
@@ -924,6 +935,25 @@ function handleZPress() {
                 }
             }, 16);
             flashText(trapdoorOpen ? "Trapdoor opened." : "Trapdoor closed.");
+        }
+        else if (type === 'ladder') {
+            if (!isClimbingLadder && camera.position.y < -1.0) {
+                isClimbingLadder = true;
+                if (!trapdoorOpen) {
+                    trapdoorOpen = true;
+                    trapPivot.rotation.x = -Math.PI / 1.8;
+                }
+                let climbAnim = setInterval(() => {
+                    camera.position.y += 0.15;
+                    camera.position.x += (-1.0 - camera.position.x) * 0.1;
+                    camera.position.z += (-15.0 - camera.position.z) * 0.1;
+                    if (camera.position.y >= 1.7) {
+                        camera.position.y = 1.7;
+                        isClimbingLadder = false;
+                        clearInterval(climbAnim);
+                    }
+                }, 16);
+            }
         }
         else if (type === 'axe') {
             hasAxe = true;
@@ -1088,70 +1118,56 @@ function animate() {
 
     updateGuidanceAndHints(dt);
 
-    // Dynamic Floor height checks
-    let inHoleArea = (trapdoorOpen && camera.position.x > -2 && camera.position.x < 0 && camera.position.z > -16 && camera.position.z < -14);
-    let floorHeight = inHoleArea ? -2.3 : (camera.position.y < -1.0 ? -2.3 : 1.7);
+    if (!isClimbingLadder) {
+        // Dynamic Floor height checks
+        let inHoleArea = (trapdoorOpen && camera.position.x > -2 && camera.position.x < 0 && camera.position.z > -16 && camera.position.z < -14);
+        let floorHeight = inHoleArea ? -2.3 : (camera.position.y < -1.0 ? -2.3 : 1.7);
 
-    // Smooth Non-Instant Ladder Climbing Logic
-    let nearLadder = (camera.position.x > -1.5 && camera.position.x < -0.5 && camera.position.z > -14.8 && camera.position.z < -13.8);
-    if (nearLadder && keys.w) {
-        let ladderClimbSpeed = 2.5;
-        if (camera.position.y < 1.7) {
-            camera.position.y += ladderClimbSpeed * dt;
-            verticalVelocity = 0;
-        }
-    } else if (nearLadder && keys.s) {
-        let ladderClimbSpeed = 2.5;
-        if (camera.position.y > -2.3) {
-            camera.position.y -= ladderClimbSpeed * dt;
-            verticalVelocity = 0;
-        }
-    } else {
         // Normal Gravity physics
         verticalVelocity -= 15.0 * dt;
         camera.position.y += verticalVelocity * dt;
-    }
 
-    if (camera.position.y <= floorHeight) {
-        camera.position.y = floorHeight;
-        verticalVelocity = 0;
-        isGrounded = true;
-    }
-
-    // Player Movement
-    if (document.pointerLockElement === document.body && currentState !== STATE.DEAD) {
-        direction.z = Number(keys.w) - Number(keys.s);
-        direction.x = Number(keys.d) - Number(keys.a);
-        direction.normalize();
-
-        const camDir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
-        camDir.y = 0; camDir.normalize();
-        const camRight = new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);
-        camRight.y = 0; camRight.normalize();
-
-        const moveVec = new THREE.Vector3();
-        moveVec.addScaledVector(camDir, direction.z);
-        moveVec.addScaledVector(camRight, direction.x);
-        
-        let targetSpeed = (keys.w || keys.a || keys.s || keys.d) ? speed : 0;
-        let oldX = camera.position.x;
-        let oldZ = camera.position.z;
-        
-        let nextX = oldX + moveVec.x * targetSpeed * dt;
-        if(!checkCollisions(new THREE.Vector3(nextX, camera.position.y, oldZ))) {
-            camera.position.x = nextX;
+        if (camera.position.y <= floorHeight) {
+            camera.position.y = floorHeight;
+            verticalVelocity = 0;
+            isGrounded = true;
         }
-        
-        let nextZ = oldZ + moveVec.z * targetSpeed * dt;
-        if(!checkCollisions(new THREE.Vector3(camera.position.x, camera.position.y, nextZ))) {
-            camera.position.z = nextZ;
+
+        // Player Movement
+        if (document.pointerLockElement === document.body && currentState !== STATE.DEAD) {
+            direction.z = Number(keys.w) - Number(keys.s);
+            direction.x = Number(keys.d) - Number(keys.a);
+            direction.normalize();
+
+            const camDir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+            camDir.y = 0; camDir.normalize();
+            const camRight = new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);
+            camRight.y = 0; camRight.normalize();
+
+            const moveVec = new THREE.Vector3();
+            moveVec.addScaledVector(camDir, direction.z);
+            moveVec.addScaledVector(camRight, direction.x);
+            
+            let targetSpeed = (keys.w || keys.a || keys.s || keys.d) ? speed : 0;
+            let oldX = camera.position.x;
+            let oldZ = camera.position.z;
+            
+            let nextX = oldX + moveVec.x * targetSpeed * dt;
+            if(!checkCollisions(new THREE.Vector3(nextX, camera.position.y, oldZ))) {
+                camera.position.x = nextX;
+            }
+            
+            let nextZ = oldZ + moveVec.z * targetSpeed * dt;
+            if(!checkCollisions(new THREE.Vector3(camera.position.x, camera.position.y, nextZ))) {
+                camera.position.z = nextZ;
+            }
         }
     }
 
     // Interaction Raycast
     activeInteractable = null;
     ui.prompt.style.display = 'none';
-    if(currentState !== STATE.DEAD && currentState !== STATE.INPUT_Q && currentState !== STATE.NOTE1_READ && currentState !== STATE.NOTE2_READ) {
+    if(currentState !== STATE.DEAD && currentState !== STATE.INPUT_Q && currentState !== STATE.NOTE1_READ && currentState !== STATE.NOTE2_READ && !isClimbingLadder) {
         raycaster.setFromCamera(screenCenter, camera);
         const intersects = raycaster.intersectObjects(interactables);
         if (intersects.length > 0 && intersects[0].distance < 4) {
@@ -1176,7 +1192,18 @@ function animate() {
             }
             else if(type === 'crowbar' && currentState === STATE.FIND_CROWBAR) { show = true; pText = "Z to take crowbar"; }
             else if(type === 'smiler' && currentState === STATE.HUNT_SMILER) { show = true; pText = "Z to talk"; }
-            else if(type === 'trapdoor') { show = true; pText = trapdoorOpen ? "Z to close trapdoor" : "Z to open trapdoor"; }
+            else if(type === 'trapdoor') { 
+                if (camera.position.y > -1.0) {
+                    show = true; 
+                    pText = trapdoorOpen ? "Z to close trapdoor" : "Z to open trapdoor"; 
+                }
+            }
+            else if(type === 'ladder') {
+                if (camera.position.y < -1.0) {
+                    show = true;
+                    pText = "Z to climb ladder";
+                }
+            }
             else if(type === 'axe') { show = true; pText = "Z to take Axe"; }
             else if(type === 'tree') { show = true; pText = hasAxe ? "Z to chop tree" : "Need Axe to chop"; }
             else if(type === 'mirror') { show = true; pText = "Z to take Hand Mirror"; }
