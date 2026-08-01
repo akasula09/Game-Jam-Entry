@@ -420,8 +420,8 @@ ui.lvl2Btn.addEventListener('click', () => {
 
 // --- THREE.JS SETUP ---
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0a0d14);
-scene.fog = new THREE.Fog(0x0a0d14, 2, 45);
+scene.background = new THREE.Color(0x05070a);
+scene.fog = new THREE.Fog(0x05070a, 1, 30);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -429,14 +429,15 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
-// Brighter Lighting Setup
-const ambientLight = new THREE.AmbientLight(0x445566, 0.8);
+// Balanced Atmospheric "Middle Point" Lighting Setup
+const ambientLight = new THREE.AmbientLight(0x1a222e, 0.35);
 scene.add(ambientLight);
-const moonLight = new THREE.DirectionalLight(0x88aabb, 0.8);
+
+const moonLight = new THREE.DirectionalLight(0x557799, 0.4);
 moonLight.position.set(10, 25, 10);
 scene.add(moonLight);
 
-const houseLight = new THREE.PointLight(0xffddaa, 1.8, 15);
+const houseLight = new THREE.PointLight(0xffaa55, 0.9, 12);
 houseLight.position.set(0, 3.5, -15);
 scene.add(houseLight);
 
@@ -528,7 +529,7 @@ function addWallCollider(x, z, w, d) {
 }
 
 // Ground
-const groundMat = new THREE.MeshLambertMaterial({ color: 0x1a2f1a });
+const groundMat = new THREE.MeshLambertMaterial({ color: 0x111c11 });
 const groundGeo = new THREE.PlaneGeometry(250, 250);
 const ground = new THREE.Mesh(groundGeo, groundMat);
 ground.rotation.x = -Math.PI / 2;
@@ -536,9 +537,9 @@ scene.add(ground);
 
 // Forest Trees
 const trunkGeo = new THREE.CylinderGeometry(0.3, 0.4, 3);
-const trunkMat = new THREE.MeshLambertMaterial({ color: 0x4a321f });
+const trunkMat = new THREE.MeshLambertMaterial({ color: 0x332215 });
 const leavesGeo = new THREE.ConeGeometry(1.5, 4);
-const leavesMat = new THREE.MeshLambertMaterial({ color: 0x143815 });
+const leavesMat = new THREE.MeshLambertMaterial({ color: 0x0a200b });
 
 for (let i = 0; i < 150; i++) {
     let tx = (Math.random() - 0.5) * 90;
@@ -557,7 +558,7 @@ for (let i = 0; i < 150; i++) {
 
 // Weak Tree in front of house
 const weakTreeGroup = new THREE.Group();
-const weakTrunk = new THREE.Mesh(trunkGeo, new THREE.MeshLambertMaterial({ color: 0x5a3d28 }));
+const weakTrunk = new THREE.Mesh(trunkGeo, new THREE.MeshLambertMaterial({ color: 0x442b1a }));
 weakTrunk.position.set(0, 1.5, 0);
 const weakLeaves = new THREE.Mesh(leavesGeo, leavesMat);
 weakLeaves.position.set(0, 4.5, 0);
@@ -580,9 +581,9 @@ scene.add(keyMesh);
 interactables.push(keyMesh);
 
 // --- CABIN INTERIOR & STRUCTURE ---
-const wallMat = new THREE.MeshLambertMaterial({ color: 0x4a3222 });
-const floorMat = new THREE.MeshLambertMaterial({ color: 0x332218 });
-const ceilingMat = new THREE.MeshLambertMaterial({ color: 0x221610 });
+const wallMat = new THREE.MeshLambertMaterial({ color: 0x3d281a });
+const floorMat = new THREE.MeshLambertMaterial({ color: 0x241810 });
+const ceilingMat = new THREE.MeshLambertMaterial({ color: 0x170f0a });
 
 // Cabin Floor
 const houseFloor = new THREE.Mesh(new THREE.BoxGeometry(9.5, 0.1, 9.5), floorMat);
@@ -616,7 +617,7 @@ hwF2.position.set(3, 2, -10);
 scene.add(hwF2); addWallCollider(3, -10, 3.5, 0.5);
 
 // Roof
-const roof = new THREE.Mesh(new THREE.ConeGeometry(8, 3, 4), new THREE.MeshLambertMaterial({ color: 0x24140d }));
+const roof = new THREE.Mesh(new THREE.ConeGeometry(8, 3, 4), new THREE.MeshLambertMaterial({ color: 0x1c0f0a }));
 roof.position.set(0, 5.5, -15);
 roof.rotation.y = Math.PI/4;
 scene.add(roof);
@@ -624,7 +625,7 @@ scene.add(roof);
 // Door & Barricade Colliders
 const doorPivot = new THREE.Group();
 doorPivot.position.set(-1.25, 0, -10);
-const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(2.5, 3.8, 0.2), new THREE.MeshLambertMaterial({ color: 0x6b4433 }));
+const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(2.5, 3.8, 0.2), new THREE.MeshLambertMaterial({ color: 0x4d3023 }));
 doorMesh.position.set(1.25, 1.9, 0);
 doorPivot.add(doorMesh);
 scene.add(doorPivot);
@@ -634,11 +635,11 @@ doorMesh.userData = { type: 'door' };
 interactables.push(doorMesh);
 
 let doorColliderIdx = solidWalls.length;
-addWallCollider(0, -10, 2.5, 0.5); // Starts closed (blocks passage)
+addWallCollider(0, -10, 2.5, 0.5);
 
 const barricadeMesh = new THREE.Group();
 for(let i=0; i<4; i++) {
-    const plank = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.4, 0.15), new THREE.MeshLambertMaterial({ color: 0x3d2817 }));
+    const plank = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.4, 0.15), new THREE.MeshLambertMaterial({ color: 0x2b1c10 }));
     plank.position.set(0, 0.8 + i*0.8, -10);
     plank.rotation.z = (i % 2 === 0 ? 1 : -1) * 0.08;
     barricadeMesh.add(plank);
@@ -646,11 +647,11 @@ for(let i=0; i<4; i++) {
 barricadeMesh.visible = false;
 scene.add(barricadeMesh);
 
-// --- FURNITURE & ORIGINAL CREEPY NOTES ---
+// --- FURNITURE & NOTES ---
 const bedGroup = new THREE.Group();
-const bedFrame = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.5, 4.0), new THREE.MeshLambertMaterial({ color: 0x4a321f }));
+const bedFrame = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.5, 4.0), new THREE.MeshLambertMaterial({ color: 0x332215 }));
 bedFrame.position.set(0, 0.25, 0);
-const mattress = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.4, 3.8), new THREE.MeshLambertMaterial({ color: 0x99aabb }));
+const mattress = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.4, 3.8), new THREE.MeshLambertMaterial({ color: 0x556677 }));
 mattress.position.set(0, 0.6, 0);
 bedGroup.add(bedFrame); bedGroup.add(mattress);
 bedGroup.position.set(-3.2, 0, -17.5);
@@ -658,40 +659,39 @@ scene.add(bedGroup);
 addWallCollider(-3.2, -17.5, 2.4, 4.0);
 
 const tableGroup = new THREE.Group();
-const tableTop = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.1, 1.6), new THREE.MeshLambertMaterial({ color: 0x5a3d28 }));
+const tableTop = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.1, 1.6), new THREE.MeshLambertMaterial({ color: 0x3e2b1c }));
 tableTop.position.set(0, 0.9, 0);
 tableGroup.add(tableTop);
 tableGroup.position.set(3.2, 0, -17.5);
 scene.add(tableGroup);
 addWallCollider(3.2, -17.5, 2.2, 1.6);
 
-// Note 1 (Original Creepy Text)
+// Note 1
 const noteGeo = new THREE.BoxGeometry(0.4, 0.02, 0.5);
-const noteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+const noteMat = new THREE.MeshBasicMaterial({ color: 0xdddddd });
 const note1 = new THREE.Mesh(noteGeo, noteMat);
 note1.position.set(3.2, 0.96, -17.5);
 note1.userData = { type: 'note1', text: "They watch from the woods. Do not let them smile back." };
 scene.add(note1);
 interactables.push(note1);
 
-// Note 2 (Under rug - Original Creepy Text)
+// Note 2
 const note2 = new THREE.Mesh(noteGeo, noteMat);
 note2.position.set(0, 0.02, -14);
 note2.userData = { type: 'note2', text: "The trapdoor is unlocked. Descend into the dark where it waits." };
 
 // Rug & Animated Trapdoor
 const rugGeo = new THREE.BoxGeometry(2.4, 0.02, 3.2);
-const rugMesh = new THREE.Mesh(rugGeo, new THREE.MeshLambertMaterial({ color: 0x882222 }));
+const rugMesh = new THREE.Mesh(rugGeo, new THREE.MeshLambertMaterial({ color: 0x661111 }));
 rugMesh.position.set(0, 0.11, -14);
 rugMesh.userData = { type: 'rug' };
 scene.add(rugMesh);
 interactables.push(rugMesh);
 
-// Trapdoor Pivot Group for Smooth Opening Animation
 const trapdoorPivot = new THREE.Group();
-const tdDoor = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.04, 2.0), new THREE.MeshLambertMaterial({ color: 0x3d2817 }));
-tdDoor.position.set(1.0, 0.02, 0); // Pivot on edge
-const tdRing = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.02, 8, 16), new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.8 }));
+const tdDoor = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.04, 2.0), new THREE.MeshLambertMaterial({ color: 0x2b1c10 }));
+tdDoor.position.set(1.0, 0.02, 0);
+const tdRing = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.02, 8, 16), new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.8 }));
 tdRing.rotation.x = Math.PI / 2;
 tdRing.position.set(1.7, 0.05, 0);
 trapdoorPivot.add(tdDoor); trapdoorPivot.add(tdRing);
@@ -701,17 +701,17 @@ scene.add(trapdoorPivot);
 interactables.push(trapdoorPivot);
 let trapdoorMoving = false;
 
-// --- CELLAR SETUP (SAFE BOUNDS) ---
+// --- CELLAR SETUP ---
 const cellarGroup = new THREE.Group();
 cellarGroup.position.set(0, -6, -14);
 
-const cellarFloor = new THREE.Mesh(new THREE.PlaneGeometry(16, 16), new THREE.MeshLambertMaterial({ color: 0x111111 }));
+const cellarFloor = new THREE.Mesh(new THREE.PlaneGeometry(16, 16), new THREE.MeshLambertMaterial({ color: 0x090909 }));
 cellarFloor.rotation.x = -Math.PI / 2;
 cellarGroup.add(cellarFloor);
 
-const cellarWallMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
+const cellarWallMat = new THREE.MeshLambertMaterial({ color: 0x151515 });
 const cwBack = new THREE.Mesh(new THREE.BoxGeometry(16, 6, 0.3), cellarWallMat); cwBack.position.set(0, 3, -8); cellarGroup.add(cwBack);
-addWallCollider(0, -22, 16, 0.3); // Cellar back wall collider
+addWallCollider(0, -22, 16, 0.3);
 const cwFront = new THREE.Mesh(new THREE.BoxGeometry(16, 6, 0.3), cellarWallMat); cwFront.position.set(0, 3, 8); cellarGroup.add(cwFront);
 const cwLeft = new THREE.Mesh(new THREE.BoxGeometry(0.3, 6, 16), cellarWallMat); cwLeft.position.set(-8, 3, 0); cellarGroup.add(cwLeft);
 addWallCollider(-8, -14, 0.3, 16);
@@ -721,7 +721,7 @@ addWallCollider(8, -14, 0.3, 16);
 // Ladder
 const ladderGroup = new THREE.Group();
 for(let i=0; i<12; i++) {
-    const rung = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.08), new THREE.MeshBasicMaterial({ color: 0x775533 }));
+    const rung = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.08), new THREE.MeshBasicMaterial({ color: 0x553311 }));
     rung.position.set(0, i * 0.5 - 5.5, -0.9);
     ladderGroup.add(rung);
 }
@@ -730,8 +730,8 @@ scene.add(ladderGroup);
 
 // Axe in Cellar
 const axeMesh = new THREE.Group();
-const axeHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.2), new THREE.MeshLambertMaterial({ color: 0x8b5a2b }));
-const axeBlade = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.05), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9 }));
+const axeHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.2), new THREE.MeshLambertMaterial({ color: 0x5c3a1b }));
+const axeBlade = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.05), new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.9 }));
 axeBlade.position.set(0.15, 0.4, 0);
 axeMesh.add(axeHandle); axeMesh.add(axeBlade);
 axeMesh.position.set(-2, -5.4, -16);
@@ -739,8 +739,8 @@ axeMesh.userData = { type: 'axe' };
 cellarGroup.add(axeMesh);
 
 // Mirror & Note in Cellar
-const mirrorFrame = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.0, 0.1), new THREE.MeshStandardMaterial({ color: 0xd4af37 }));
-const mirrorGlass = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.8), new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 1.0, roughness: 0.05 }));
+const mirrorFrame = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.0, 0.1), new THREE.MeshStandardMaterial({ color: 0x8a7020 }));
+const mirrorGlass = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.8), new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 1.0, roughness: 0.05 }));
 mirrorGlass.position.z = 0.06;
 const mirrorGroup = new THREE.Group();
 mirrorGroup.add(mirrorFrame); mirrorGroup.add(mirrorGlass);
@@ -757,14 +757,14 @@ interactables.push(mirrorNote);
 scene.add(cellarGroup);
 
 // Crowbar behind house
-const crowbarMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.2), new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.8 }));
+const crowbarMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.2), new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.8 }));
 crowbarMesh.rotation.z = Math.PI / 3;
 crowbarMesh.position.set(0, 0.2, -22);
 crowbarMesh.userData = { type: 'crowbar' };
 scene.add(crowbarMesh);
 
 // Mystery Box outside
-const mysteryBox = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 1.5), new THREE.MeshLambertMaterial({ color: 0x5a3d28 }));
+const mysteryBox = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 1.5), new THREE.MeshLambertMaterial({ color: 0x3d281a }));
 mysteryBox.position.set(10, 0.75, -8);
 scene.add(mysteryBox);
 mysteryBox.userData = { type: 'box' };
@@ -775,7 +775,7 @@ function createFaceTexture(scary) {
     const cvs = document.createElement('canvas');
     cvs.width = 512; cvs.height = 512;
     const ctx = cvs.getContext('2d');
-    ctx.fillStyle = scary ? '#990000' : '#ffea00';
+    ctx.fillStyle = scary ? '#880000' : '#ffea00';
     ctx.fillRect(0,0,512,512);
     
     if(!scary) {
@@ -808,7 +808,7 @@ scene.add(smiler);
 smiler.userData = { type: 'smiler' };
 
 // --- GAME LOGIC & FLOW ---
-let playerHeight = 1.7; // Fixed starting height immediately!
+let playerHeight = 1.7;
 camera.position.set(0, playerHeight, 0);
 
 function flashText(msg) {
@@ -910,9 +910,9 @@ function handleZPress() {
             let step = doorOpen ? -0.05 : 0.05;
             
             if(!doorOpen) {
-                solidWalls[doorColliderIdx].minX = 0; solidWalls[doorColliderIdx].maxX = 0; // Open door (no block)
+                solidWalls[doorColliderIdx].minX = 0; solidWalls[doorColliderIdx].maxX = 0;
             } else {
-                solidWalls[doorColliderIdx].minX = -1.25; solidWalls[doorColliderIdx].maxX = 1.25; // Closed door (blocks)
+                solidWalls[doorColliderIdx].minX = -1.25; solidWalls[doorColliderIdx].maxX = 1.25;
             }
 
             let anim = setInterval(() => {
@@ -942,7 +942,6 @@ function handleZPress() {
             currentState = STATE.NOTE2_READ;
         }
         else if (type === 'trapdoor' && !trapdoorMoving) {
-            // Trapdoor opens freely without locks
             trapdoorMoving = true;
             let target = trapdoorOpen ? 0 : -Math.PI / 2.2;
             let step = trapdoorOpen ? 0.05 : -0.05;
@@ -1022,7 +1021,7 @@ function handleZPress() {
     }
 }
 
-// Smooth Ladder Climbing Animation Function
+// Ladder Climbing Animation
 function handleLadderClimb() {
     if (!trapdoorOpen) {
         flashText("Open the trapdoor first!");
@@ -1054,7 +1053,7 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Groq Question Logic
+// Question API Logic
 ui.inputBtn.addEventListener('click', async () => {
     let q = ui.inputField.value.trim();
     if(!q) q = "What are you?";
@@ -1079,7 +1078,7 @@ ui.inputBtn.addEventListener('click', async () => {
     currentState = STATE.READ_A;
 });
 
-// --- PATHFINDING & COLLISION FOR SMILER ---
+// Smiler Movement
 function moveSmilerWithPathfinding(dt) {
     let targetPos = camera.position.clone();
     let dir = new THREE.Vector3().subVectors(targetPos, smiler.position);
@@ -1194,7 +1193,7 @@ function animate() {
         }
     }
 
-    // Player Movement
+    // Movement
     if (document.pointerLockElement === document.body && currentState !== STATE.DEAD && currentState !== STATE.WIN && !isClimbing) {
         let dirZ = Number(keys.w) - Number(keys.s);
         let dirX = Number(keys.d) - Number(keys.a);
@@ -1257,14 +1256,13 @@ function animate() {
             }
         }
 
-        // Ladder Climb Prompt
         if(Math.abs(camera.position.x) < 1.5 && camera.position.z > -14.8 && camera.position.z < -13.2) {
             ui.prompt.innerText = trapdoorOpen ? "Z to climb ladder" : "Trapdoor is closed";
             ui.prompt.style.display = 'block';
         }
     }
 
-    // Smiler Chase & Siege Phases
+    // Chase Phase
     if(currentState === STATE.COUNTDOWN) {
         countdownTimer -= dt;
         flashText(`SMILER IS COMING IN: ${Math.ceil(countdownTimer)}`);
