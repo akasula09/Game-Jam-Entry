@@ -534,20 +534,20 @@ for(let i=0; i<4; i++) {
 barricadeGroup.visible = false;
 scene.add(barricadeGroup);
 
-// Furniture
-const bed = new THREE.Mesh(new THREE.BoxGeometry(3, 1, 5), new THREE.MeshLambertMaterial({ color: 0x223355 }));
-bed.position.set(-2.5, 0.5, -17);
-scene.add(bed); addWallCollider(-2.5, -17, 3, 5);
+// Furniture (Moved Bed to (-3.5, 0.5, -12) so it does NOT clip with the trapdoor at x:-2..0, z:-16..-14)
+const bed = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 4), new THREE.MeshLambertMaterial({ color: 0x223355 }));
+bed.position.set(-3.5, 0.5, -12);
+scene.add(bed); addWallCollider(-3.5, -12, 2, 4);
 
 const table = new THREE.Mesh(new THREE.BoxGeometry(2, 1.2, 2), new THREE.MeshLambertMaterial({color: 0x553311}));
 table.position.set(2.5, 0.6, -18);
 scene.add(table); addWallCollider(2.5, -18, 2, 2);
 
-// TRAPDOOR & BASEMENT SYSTEM
+// TRAPDOOR SYSTEM (Pivot on edge z = -14; Pure swing rotation)
 const trapPivot = new THREE.Group();
-trapPivot.position.set(-1, 0.01, -16);
+trapPivot.position.set(-1, 0, -14); // Placed at edge so it swings up cleanly without translating vertical height
 const trapMesh = new THREE.Mesh(new THREE.BoxGeometry(2, 0.05, 2), new THREE.MeshLambertMaterial({ color: 0x3a2510 }));
-trapMesh.position.set(0, 0, 1);
+trapMesh.position.set(0, 0, -1);
 trapPivot.add(trapMesh);
 scene.add(trapPivot);
 trapMesh.userData = { type: 'trapdoor' };
@@ -565,7 +565,11 @@ const bWallF = new THREE.Mesh(new THREE.BoxGeometry(9.5, 4, 0.4), basementMat); 
 const bWallL = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4, 9.5), basementMat); bWallL.position.set(-4.5, -2, -15); scene.add(bWallL);
 const bWallR = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4, 9.5), basementMat); bWallR.position.set(4.5, -2, -15); scene.add(bWallR);
 
-// Ladder
+// Ladder & Solid Support Wall Behind Ladder
+const ladderSupportWall = new THREE.Mesh(new THREE.BoxGeometry(1.6, 4, 0.3), basementMat);
+ladderSupportWall.position.set(-1.0, -2.0, -13.85);
+scene.add(ladderSupportWall);
+
 const ladderMat = new THREE.MeshLambertMaterial({ color: 0x553311 });
 for(let y=0; y<8; y++) {
     let rung = new THREE.Mesh(new THREE.BoxGeometry(1, 0.08, 0.08), ladderMat);
@@ -694,7 +698,7 @@ smiler.userData = { type: 'smiler' };
 const boxPieces = [];
 
 // --- LOGIC / FLOW ---
-let playerHeightOffset = 1.7;
+let playerHeightOffset = 0.2;
 camera.position.set(0, playerHeightOffset, 0);
 
 function startWakingSequence() {
@@ -709,7 +713,7 @@ function startWakingSequence() {
                 ui.lidTop.style.height = '0%';
                 ui.lidBottom.style.height = '0%';
                 let standInterval = setInterval(() => {
-                    playerHeightOffset += 0.05;
+                    playerHeightOffset += 0.03;
                     if(playerHeightOffset >= 1.7) {
                         playerHeightOffset = 1.7;
                         clearInterval(standInterval);
@@ -889,15 +893,20 @@ function handleZPress() {
         }
         else if (type === 'trapdoor') {
             trapdoorOpen = !trapdoorOpen;
-            let targetRot = trapdoorOpen ? Math.PI / 1.8 : 0;
-            let targetY = trapdoorOpen ? 0.8 : 0.01;
+            let targetRot = trapdoorOpen ? -Math.PI / 1.8 : 0; // Rotates backward around X axis smoothly in place
             let anim = setInterval(() => {
-                trapPivot.rotation.x += (trapdoorOpen ? 0.05 : -0.05);
-                trapPivot.position.y += (trapdoorOpen ? 0.04 : -0.04);
-                if ((trapdoorOpen && trapPivot.rotation.x >= targetRot) || (!trapdoorOpen && trapPivot.rotation.x <= 0)) {
-                    trapPivot.rotation.x = trapdoorOpen ? targetRot : 0;
-                    trapPivot.position.y = trapdoorOpen ? targetY : 0.01;
-                    clearInterval(anim);
+                if (trapdoorOpen) {
+                    trapPivot.rotation.x -= 0.05;
+                    if (trapPivot.rotation.x <= targetRot) {
+                        trapPivot.rotation.x = targetRot;
+                        clearInterval(anim);
+                    }
+                } else {
+                    trapPivot.rotation.x += 0.05;
+                    if (trapPivot.rotation.x >= 0) {
+                        trapPivot.rotation.x = 0;
+                        clearInterval(anim);
+                    }
                 }
             }, 16);
             flashText(trapdoorOpen ? "Trapdoor opened." : "Trapdoor closed.");
@@ -1065,20 +1074,29 @@ function animate() {
 
     updateGuidanceAndHints(dt);
 
-    // Gravity & Ground Level physics
+    // Dynamic Floor height checks
     let inHoleArea = (trapdoorOpen && camera.position.x > -2 && camera.position.x < 0 && camera.position.z > -16 && camera.position.z < -14);
     let floorHeight = inHoleArea ? -2.3 : (camera.position.y < -1.0 ? -2.3 : 1.7);
 
-    // Ladder Auto-Climb
+    // Smooth Non-Instant Ladder Climbing Logic
     let nearLadder = (camera.position.x > -1.5 && camera.position.x < -0.5 && camera.position.z > -14.8 && camera.position.z < -13.8);
     if (nearLadder && keys.w) {
-        floorHeight = 1.7;
-        camera.position.y = Math.min(1.7, camera.position.y + 3.0 * dt);
+        let ladderClimbSpeed = 2.5; // Smooth constant climb rate
+        if (camera.position.y < 1.7) {
+            camera.position.y += ladderClimbSpeed * dt;
+            verticalVelocity = 0; // Disable gravity while actively climbing
+        }
+    } else if (nearLadder && keys.s) {
+        let ladderClimbSpeed = 2.5;
+        if (camera.position.y > -2.3) {
+            camera.position.y -= ladderClimbSpeed * dt;
+            verticalVelocity = 0;
+        }
+    } else {
+        // Normal Gravity physics when off ladder
+        verticalVelocity -= 15.0 * dt;
+        camera.position.y += verticalVelocity * dt;
     }
-
-    // Apply Jump / Gravity physics
-    verticalVelocity -= 15.0 * dt;
-    camera.position.y += verticalVelocity * dt;
 
     if (camera.position.y <= floorHeight) {
         camera.position.y = floorHeight;
