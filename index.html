@@ -436,6 +436,19 @@ makeFloorTile(2.25, -15, 4.5, 9);   // Right
 makeFloorTile(-1, -17.75, 2, 3.5);  // Back
 makeFloorTile(-1, -12.25, 2, 3.5);  // Front
 
+// Basement Ceiling / House Floor Slab (Solid bottom side visible from basement looking up)
+const bCeilingMat = new THREE.MeshLambertMaterial({ color: 0x22150a, side: THREE.DoubleSide });
+function makeCeilingTile(x, z, w, d) {
+    let c = new THREE.Mesh(new THREE.PlaneGeometry(w, d), bCeilingMat);
+    c.rotation.x = Math.PI / 2;
+    c.position.set(x, -0.01, z);
+    scene.add(c);
+}
+makeCeilingTile(-3.25, -15, 2.5, 9);  // Left ceiling
+makeCeilingTile(2.25, -15, 4.5, 9);   // Right ceiling
+makeCeilingTile(-1, -17.75, 2, 3.5);  // Back ceiling
+makeCeilingTile(-1, -12.25, 2, 3.5);  // Front ceiling
+
 // Forest Trees
 const trunkGeo = new THREE.CylinderGeometry(0.3, 0.4, 3);
 const trunkMat = new THREE.MeshLambertMaterial({ color: 0x3d2817 });
@@ -534,7 +547,7 @@ for(let i=0; i<4; i++) {
 barricadeGroup.visible = false;
 scene.add(barricadeGroup);
 
-// Furniture (Moved Bed to (-3.5, 0.5, -12) so it does NOT clip with the trapdoor at x:-2..0, z:-16..-14)
+// Furniture (Bed at x:-3.5, y:0.5, z:-12)
 const bed = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 4), new THREE.MeshLambertMaterial({ color: 0x223355 }));
 bed.position.set(-3.5, 0.5, -12);
 scene.add(bed); addWallCollider(-3.5, -12, 2, 4);
@@ -545,7 +558,7 @@ scene.add(table); addWallCollider(2.5, -18, 2, 2);
 
 // TRAPDOOR SYSTEM (Pivot on edge z = -14; Pure swing rotation)
 const trapPivot = new THREE.Group();
-trapPivot.position.set(-1, 0, -14); // Placed at edge so it swings up cleanly without translating vertical height
+trapPivot.position.set(-1, 0, -14);
 const trapMesh = new THREE.Mesh(new THREE.BoxGeometry(2, 0.05, 2), new THREE.MeshLambertMaterial({ color: 0x3a2510 }));
 trapMesh.position.set(0, 0, -1);
 trapPivot.add(trapMesh);
@@ -627,9 +640,10 @@ note1.userData = { type: 'note1' };
 scene.add(note1);
 interactables.push(note1);
 
+// Note 2 placed directly on top of the bed at its new position
 const note2 = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.5), new THREE.MeshBasicMaterial({ color: 0xffffff }));
 note2.rotation.x = -Math.PI / 2;
-note2.position.set(-2.5, 1.01, -18.5);
+note2.position.set(-3.5, 1.01, -12);
 note2.userData = { type: 'note2' };
 scene.add(note2);
 
@@ -893,7 +907,7 @@ function handleZPress() {
         }
         else if (type === 'trapdoor') {
             trapdoorOpen = !trapdoorOpen;
-            let targetRot = trapdoorOpen ? -Math.PI / 1.8 : 0; // Rotates backward around X axis smoothly in place
+            let targetRot = trapdoorOpen ? -Math.PI / 1.8 : 0;
             let anim = setInterval(() => {
                 if (trapdoorOpen) {
                     trapPivot.rotation.x -= 0.05;
@@ -1026,7 +1040,7 @@ function updateGuidanceAndHints(dt) {
         hintMsg = "Use the key to unlock the house door ahead.";
         targetObj = doorMesh;
     } else if (currentState === STATE.FIND_NOTE2) {
-        hintMsg = "Search in the dark corners under the furniture for the rest of the note.";
+        hintMsg = "Search on top of the bed in the corner for the rest of the note.";
         targetObj = note2;
     } else if (currentState === STATE.SEEK_BOX) {
         hintMsg = "Go outside and check the wooden box on the side.";
@@ -1081,10 +1095,10 @@ function animate() {
     // Smooth Non-Instant Ladder Climbing Logic
     let nearLadder = (camera.position.x > -1.5 && camera.position.x < -0.5 && camera.position.z > -14.8 && camera.position.z < -13.8);
     if (nearLadder && keys.w) {
-        let ladderClimbSpeed = 2.5; // Smooth constant climb rate
+        let ladderClimbSpeed = 2.5;
         if (camera.position.y < 1.7) {
             camera.position.y += ladderClimbSpeed * dt;
-            verticalVelocity = 0; // Disable gravity while actively climbing
+            verticalVelocity = 0;
         }
     } else if (nearLadder && keys.s) {
         let ladderClimbSpeed = 2.5;
@@ -1093,7 +1107,7 @@ function animate() {
             verticalVelocity = 0;
         }
     } else {
-        // Normal Gravity physics when off ladder
+        // Normal Gravity physics
         verticalVelocity -= 15.0 * dt;
         camera.position.y += verticalVelocity * dt;
     }
