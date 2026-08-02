@@ -108,7 +108,7 @@
 
         #note-view p {
             color: #900;
-            font-size: 30px;
+            font-size: 35px;
             font-weight: bold;
             font-style: italic;
             margin: 0;
@@ -163,6 +163,7 @@
         }
         #input-view button:hover { background: #666; }
 
+        /* Updated Game Over & Level 2 Button Styling */
         #game-over {
             top: 0; left: 0; width: 100%; height: 100%;
             background: black;
@@ -195,38 +196,6 @@
             background: #880000;
             color: #fff;
             box-shadow: 0 0 25px rgba(255, 0, 0, 0.9);
-        }
-
-        #victory-screen {
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: black;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            pointer-events: auto;
-        }
-        #victory-screen h1 {
-            color: #ffaa00;
-            font-size: 3vw;
-            text-shadow: 0 0 15px #ff6600;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        #restart-btn {
-            padding: 15px 35px;
-            font-size: 22px;
-            font-family: 'Courier New', Courier, monospace;
-            background: #111;
-            color: #ffaa00;
-            border: 2px solid #ffaa00;
-            cursor: pointer;
-            box-shadow: 0 0 15px rgba(255, 170, 0, 0.4);
-        }
-        #restart-btn:hover {
-            background: #ffaa00;
-            color: #000;
         }
 
         .click-to-start {
@@ -275,11 +244,6 @@
         <button id="level2-btn">Awake in the Desert</button>
     </div>
 
-    <div id="victory-screen" class="overlay">
-        <h1>VICTORY!<br><br>THE MATCHES IGNITED HIS DARK ENERGY.<br><br>THE SMILER IS DESTROYED.</h1>
-        <button id="restart-btn" onclick="location.reload();">Play Again</button>
-    </div>
-
 <script>
 // --- GAME STATE ENUM ---
 const STATE = {
@@ -301,17 +265,13 @@ const STATE = {
     SMILER_WALKS: 15,
     SMILER_TALK3: 16,
     CHASE: 17,
-    TUNNEL_RUN: 18,
-    TUNNEL_END: 19,
-    VICTORY: 20,
-    DEAD: 21
+    DEAD: 18
 };
 
 let currentState = STATE.WAKING;
 let timeInState = 0;
 let hasKey = false;
 let hasCrowbar = false;
-let matchesCollected = 0;
 
 // --- CONFIG & DOM ---
 const ui = {
@@ -328,11 +288,11 @@ const ui = {
     inputBtn: document.getElementById('q-btn'),
     gameOver: document.getElementById('game-over'),
     lvl2Btn: document.getElementById('level2-btn'),
-    victory: document.getElementById('victory-screen'),
     lidTop: document.getElementById('lid-top'),
     lidBottom: document.getElementById('lid-bottom')
 };
 
+// Redirect Button Event Listener
 ui.lvl2Btn.addEventListener('click', () => {
     window.location.href = '/leveltwo';
 });
@@ -360,7 +320,7 @@ scene.add(houseLight);
 
 // Floating Arrow Guidance Mesh
 const arrowGeo = new THREE.ConeGeometry(0.4, 1.2, 8);
-arrowGeo.rotateX(Math.PI);
+arrowGeo.rotateX(Math.PI); // Point down
 const arrowMat = new THREE.MeshBasicMaterial({ color: 0xff3333, wireframe: true });
 const guideArrow = new THREE.Mesh(arrowGeo, arrowMat);
 guideArrow.visible = false;
@@ -370,19 +330,14 @@ scene.add(guideArrow);
 let pitch = 0;
 let yaw = 0;
 const PI_2 = Math.PI / 2;
-const keys = { w: false, a: false, s: false, d: false, z: false, space: false };
+const keys = { w: false, a: false, s: false, d: false, z: false };
+const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
 let speed = 6.0;
 let smilerSpeed = 2.0;
 
-let playerHeight = 0.2;
-let playerVelocityY = 0;
-let isGrounded = true;
-const gravity = 22.0;
-const jumpForce = 7.5;
-
 document.addEventListener('mousemove', (e) => {
-    if (document.pointerLockElement === document.body && currentState !== STATE.DEAD && currentState !== STATE.VICTORY) {
+    if (document.pointerLockElement === document.body && currentState !== STATE.DEAD) {
         yaw -= e.movementX * 0.002;
         pitch -= e.movementY * 0.002;
         pitch = Math.max(-PI_2 + 0.2, Math.min(PI_2 - 0.2, pitch));
@@ -400,13 +355,6 @@ document.addEventListener('keydown', (e) => {
     if(e.code === 'KeyA') keys.a = true;
     if(e.code === 'KeyS') keys.s = true;
     if(e.code === 'KeyD') keys.d = true;
-    if(e.code === 'Space') {
-        if (isGrounded && currentState === STATE.TUNNEL_RUN) {
-            playerVelocityY = jumpForce;
-            isGrounded = false;
-        }
-        e.preventDefault();
-    }
     if(e.code === 'KeyZ') {
         if (!keys.z) handleZPress();
         keys.z = true;
@@ -428,7 +376,6 @@ ui.start.addEventListener('click', () => {
 document.body.addEventListener('click', () => {
     if (ui.start.style.display === 'none' && 
         currentState !== STATE.DEAD && 
-        currentState !== STATE.VICTORY &&
         currentState !== STATE.INPUT_Q) {
         document.body.requestPointerLock();
     }
@@ -437,8 +384,6 @@ document.body.addEventListener('click', () => {
 // --- WORLD BUILDING ---
 const interactables = [];
 let solidWalls = [];
-const matchObjects = [];
-const tunnelRocks = [];
 
 function addWallCollider(x, z, w, d) {
     solidWalls.push({
@@ -557,11 +502,11 @@ interactables.push(note1);
 
 const note2 = new THREE.Mesh(noteGeo, noteMat);
 note2.rotation.x = -Math.PI / 2;
-note2.position.set(-2.5, 1.01, -18.5);
+note2.position.set(-2.5, 1.01, -18.5); // Placed visibly on top of the bed mattress
 note2.userData = { type: 'note2' };
 scene.add(note2);
 
-// Crowbar
+// Crowbar behind the house
 const crowbarGeo = new THREE.CylinderGeometry(0.03, 0.03, 1.2);
 const crowbarMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8 });
 const crowbarMesh = new THREE.Mesh(crowbarGeo, crowbarMat);
@@ -625,62 +570,8 @@ smiler.userData = { type: 'smiler' };
 
 const boxPieces = [];
 
-// --- TUNNEL SETUP & DEFEAT SEQUENCE ---
-function startTunnelSequence() {
-    interactables.length = 0;
-    solidWalls.length = 0;
-
-    // Build Underground Tunnel
-    const tunnelMat = new THREE.MeshLambertMaterial({ color: 0x151515, side: THREE.BackSide });
-    const tunnelGeo = new THREE.BoxGeometry(6, 5, 140);
-    const tunnel = new THREE.Mesh(tunnelGeo, tunnelMat);
-    tunnel.position.set(0, 2.5, -70);
-    scene.add(tunnel);
-
-    addWallCollider(-3, -70, 0.5, 140);
-    addWallCollider(3, -70, 0.5, 140);
-
-    // Place 4 matches along the tunnel
-    const matchGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.7);
-    const matchMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
-    
-    for(let i = 1; i <= 4; i++) {
-        let mMesh = new THREE.Mesh(matchGeo, matchMat);
-        mMesh.rotation.z = Math.PI / 2;
-        mMesh.position.set((Math.random() - 0.5) * 2, 0.5, -25 * i);
-        mMesh.userData = { type: 'match', collected: false };
-        scene.add(mMesh);
-        interactables.push(mMesh);
-        matchObjects.push(mMesh);
-    }
-
-    // Place rocks in the tunnel to jump over
-    const rockGeo = new THREE.BoxGeometry(1.2, 0.7, 1.2);
-    const rockMat = new THREE.MeshLambertMaterial({ color: 0x333333 });
-    for(let i = 1; i <= 6; i++) {
-        let rMesh = new THREE.Mesh(rockGeo, rockMat);
-        rMesh.position.set((Math.random() - 0.5) * 2, 0.35, -18 * i - 10);
-        scene.add(rMesh);
-        addWallCollider(rMesh.position.x, rMesh.position.z, 1.2, 1.2);
-        tunnelRocks.push(rMesh);
-    }
-
-    // Reset player position at tunnel start
-    camera.position.set(0, 1.7, 5);
-    yaw = 0; pitch = 0;
-    camera.quaternion.setFromEuler(new THREE.Euler(0, 0, 0, 'YXZ'));
-
-    // Position Smiler behind player
-    smiler.position.set(0, 1.7, 9);
-    smiler.scale.set(1.5, 1.5, 1.5);
-    smiler.material.map = texScary;
-    smiler.visible = true;
-
-    currentState = STATE.TUNNEL_RUN;
-    flashText("RUN!");
-}
-
 // --- LOGIC / FLOW ---
+let playerHeight = 0.2;
 camera.position.set(0, playerHeight, 0);
 
 function startWakingSequence() {
@@ -727,7 +618,7 @@ function hideDialog() {
 }
 
 function handleZPress() {
-    if(currentState === STATE.DEAD || currentState === STATE.VICTORY) return;
+    if(currentState === STATE.DEAD) return;
 
     if(currentState === STATE.NOTE1_READ) {
         ui.note.style.display = 'none';
@@ -774,20 +665,7 @@ function handleZPress() {
         smiler.scale.set(1.5, 1.5, 1.5);
         smilerSpeed = 9.0;
         currentState = STATE.CHASE;
-        timeInState = 0;
         flashText("RUN.");
-        return;
-    }
-
-    if(currentState === STATE.TUNNEL_END) {
-        currentState = STATE.VICTORY;
-        hideDialog();
-        flashText("THE MATCHES IGNITED ALL AT ONCE! HE BURNS!");
-        smiler.visible = false;
-        setTimeout(() => {
-            document.exitPointerLock();
-            ui.victory.style.display = 'flex';
-        }, 1500);
         return;
     }
 
@@ -836,7 +714,7 @@ function handleZPress() {
             currentState = STATE.NOTE1_READ;
         }
         else if (type === 'note2' && currentState === STATE.FIND_NOTE2) {
-            ui.noteTxt.innerText = "The yellow face is very flammable. Even three or four matches could be deadly.";
+            ui.noteTxt.innerText = "...I need to run. Check the box outside.";
             ui.note.style.display = 'flex';
             currentState = STATE.NOTE2_READ;
         }
@@ -857,6 +735,7 @@ function handleZPress() {
             flashText("Got crowbar! Go smash the box.");
         }
         else if (type === 'box' && currentState === STATE.BREAK_BOX) {
+            // Smash Box
             mysteryBox.visible = false;
             for(let i=0; i<5; i++){
                 let p = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,0.5), boxMat);
@@ -868,6 +747,7 @@ function handleZPress() {
             solidWalls = solidWalls.filter(w => !(w.minX == 10 - 0.75 && w.maxZ == -8 + 0.75));
             interactables.splice(interactables.indexOf(mysteryBox), 1);
             
+            // Smiler vanishes into dark forest
             smiler.position.set(28, 1.2, -35); 
             smiler.visible = true;
             interactables.push(smiler);
@@ -941,6 +821,7 @@ function updateGuidanceAndHints(dt) {
     let targetObj = null;
     let hintMsg = "";
 
+    // Specific Hints and Arrow Targets
     if (currentState === STATE.FIND_KEY) {
         hintMsg = "Search the edge of the forest for a key on a wooden post.";
         targetObj = keyMesh;
@@ -964,6 +845,7 @@ function updateGuidanceAndHints(dt) {
         targetObj = smiler;
     }
 
+    // Step 1: Text Hint appears after 10s
     if (timeInState > 10 && hintMsg) {
         ui.hint.innerText = hintMsg;
         ui.hint.style.opacity = 1;
@@ -972,12 +854,13 @@ function updateGuidanceAndHints(dt) {
         ui.hint.style.opacity = 0;
     }
 
+    // Step 2: 3D Guidance Arrow appears 15 SECONDS LATER (timeInState > 25s)
     if (timeInState > 25 && targetObj) {
         let targetPos = new THREE.Vector3();
         targetObj.getWorldPosition(targetPos);
         
         let dist = camera.position.distanceTo(targetPos);
-        if (dist > 3.5) {
+        if (dist > 3.5) { // Show arrow until player gets close
             guideArrow.position.set(targetPos.x, targetPos.y + 2.2 + Math.sin(performance.now() * 0.005) * 0.2, targetPos.z);
             guideArrow.visible = true;
         } else {
@@ -996,8 +879,8 @@ function animate() {
 
     updateGuidanceAndHints(dt);
 
-    // Player Movement & Gravity / Jump
-    if (document.pointerLockElement === document.body && currentState !== STATE.DEAD && currentState !== STATE.VICTORY) {
+    // Player Movement
+    if (document.pointerLockElement === document.body && currentState !== STATE.DEAD) {
         direction.z = Number(keys.w) - Number(keys.s);
         direction.x = Number(keys.d) - Number(keys.a);
         direction.normalize();
@@ -1025,27 +908,17 @@ function animate() {
             camera.position.z = nextZ;
         }
         
-        if (currentState === STATE.TUNNEL_RUN) {
-            playerVelocityY -= gravity * dt;
-            camera.position.y += playerVelocityY * dt;
-            if (camera.position.y <= playerHeight) {
-                camera.position.y = playerHeight;
-                playerVelocityY = 0;
-                isGrounded = true;
-            }
+        if (targetSpeed > 0) {
+            camera.position.y = playerHeight + Math.sin(now * 0.01) * 0.05;
         } else {
-            if (targetSpeed > 0) {
-                camera.position.y = playerHeight + Math.sin(now * 0.01) * 0.05;
-            } else {
-                camera.position.y = playerHeight;
-            }
+            camera.position.y = playerHeight;
         }
     }
 
     // Interaction Raycast
     activeInteractable = null;
     ui.prompt.style.display = 'none';
-    if(currentState !== STATE.DEAD && currentState !== STATE.VICTORY && currentState !== STATE.INPUT_Q && currentState !== STATE.NOTE1_READ && currentState !== STATE.NOTE2_READ && currentState !== STATE.TUNNEL_END) {
+    if(currentState !== STATE.DEAD && currentState !== STATE.INPUT_Q && currentState !== STATE.NOTE1_READ && currentState !== STATE.NOTE2_READ) {
         raycaster.setFromCamera(screenCenter, camera);
         const intersects = raycaster.intersectObjects(interactables);
         if (intersects.length > 0 && intersects[0].distance < 4) {
@@ -1065,7 +938,6 @@ function animate() {
             }
             else if(type === 'crowbar' && currentState === STATE.FIND_CROWBAR) { show = true; pText = "Z to take crowbar"; }
             else if(type === 'smiler' && currentState === STATE.HUNT_SMILER) { show = true; pText = "Z to talk"; }
-            else if(type === 'match' && currentState === STATE.TUNNEL_RUN) { show = true; pText = "Z to pick up match"; }
             
             if(show) {
                 activeInteractable = obj;
@@ -1087,7 +959,7 @@ function animate() {
         }
     }
 
-    // Smiler AI Logic & Chase / Tunnel States
+    // Smiler AI Logic
     if(currentState === STATE.SMILER_WALKS) {
         let targetPos = new THREE.Vector3(-2.5, 1.5, -17);
         let dist = smiler.position.distanceTo(targetPos);
@@ -1105,54 +977,16 @@ function animate() {
         smiler.lookAt(camera.position);
         let dir = new THREE.Vector3().subVectors(camera.position, smiler.position);
         dir.y = 0; dir.normalize();
-        
-        let distToPlayer = smiler.position.distanceTo(camera.position);
-        if(distToPlayer < 5.0) {
-            smilerSpeed = speed * 0.33; // Exhausted: 1/3 speed when close
-        } else {
-            smilerSpeed = speed * 0.75; // 3/4 speed when far
-        }
-        
         smiler.position.addScaledVector(dir, smilerSpeed * dt);
         
+        let distToPlayer = smiler.position.distanceTo(camera.position);
         if(distToPlayer < 1.5) {
+            // CAUGHT - GAME OVER & SHOW LEVEL 2 BUTTON
             currentState = STATE.DEAD;
             ui.gameOver.style.display = 'flex';
             document.exitPointerLock();
         }
-
-        timeInState += dt;
-        if(timeInState > 8.0) {
-            flashText("THE GROUND SHATTERS BENEATH YOUR FEET!");
-            currentState = STATE.WAIT_Q;
-            setTimeout(() => {
-                startTunnelSequence();
-            }, 1500);
-        }
-    } 
-    else if(currentState === STATE.TUNNEL_RUN) {
-        smiler.lookAt(camera.position);
-        let dir = new THREE.Vector3().subVectors(camera.position, smiler.position);
-        dir.y = 0; dir.normalize();
-        smiler.position.addScaledVector(dir, (speed * 0.7) * dt);
-
-        // Check match pickups
-        for(let m of matchObjects) {
-            if(!m.userData.collected && camera.position.distanceTo(m.position) < 1.5) {
-                m.userData.collected = true;
-                scene.remove(m);
-                matchesCollected++;
-                flashText(`Collected Match (${matchesCollected}/4)`);
-            }
-        }
-
-        // Check end of tunnel reached
-        if (camera.position.z <= -120) {
-            currentState = STATE.TUNNEL_END;
-            showDialog("PRESS Z TO THROW THE MATCHES");
-        }
-    }
-    else if (smiler.visible && currentState < STATE.SMILER_WALKS) {
+    } else if (smiler.visible && currentState < STATE.SMILER_WALKS) {
         smiler.lookAt(camera.position);
     }
 
